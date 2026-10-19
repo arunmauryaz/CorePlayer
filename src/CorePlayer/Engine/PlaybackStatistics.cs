@@ -37,4 +37,12 @@ public class PlaybackStatistics
         (> 0, > 0) => $"{Width}x{Height}",
         _ => "Unknown"
     };
+
+    public string FormattedFps => DroppedFrames > 0 
+        ? $"{Fps:0.##} fps ({DroppedFrames} dropped)" 
+        : $"{Fps:0.##} fps";
+
+    public string FormattedCache => CacheTime.TotalSeconds > 0
+        ? $"{CacheFillPercent:0.#}% ({CacheTime.TotalSeconds:0.#}s ahead)"
+        : $"{CacheFillPercent:0.#}%";
 }

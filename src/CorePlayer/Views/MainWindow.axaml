@@ -178,6 +178,8 @@
                     <!-- Audio -->
                     <MenuItem Header="_Audio">
                         <MenuItem Header="Audio Tracks" Command="{Binding ToggleTracksMenuCommand}" />
+                        <MenuItem Header="Cycle Audio Track" Command="{Binding CycleAudioTrackCommand}" InputGesture="B" />
+                        <MenuItem Header="Night Mode (Dialogue Boost)" Command="{Binding ToggleNightModeCommand}" />
                         <Separator />
                         <MenuItem Header="Mute / Unmute" Command="{Binding ToggleMuteCommand}" InputGesture="M" />
                         <MenuItem Header="Volume Up" Command="{Binding VolumeUpCommand}" />
@@ -187,6 +189,7 @@
                     <!-- Subtitle -->
                     <MenuItem Header="_Subtitle">
                         <MenuItem Header="Subtitle Tracks" Command="{Binding ToggleTracksMenuCommand}" InputGesture="C" />
+                        <MenuItem Header="Cycle Subtitle Track" Command="{Binding CycleSubtitleTrackCommand}" InputGesture="V" />
                         <MenuItem Header="Add Subtitle File..." Click="OnAddExternalSubtitleClick" />
                         <Separator />
                         <MenuItem Header="Delay +0.1s" Command="{Binding SubtitleDelayPlusCommand}" />
@@ -204,6 +207,12 @@
                             <MenuItem Header="16:9 Widescreen" Command="{Binding SetAspectRatioCommand}" CommandParameter="16:9" />
                             <MenuItem Header="4:3 Standard" Command="{Binding SetAspectRatioCommand}" CommandParameter="4:3" />
                             <MenuItem Header="2.35:1 Cinematic" Command="{Binding SetAspectRatioCommand}" CommandParameter="2.35:1" />
+                        </MenuItem>
+                        <MenuItem Header="Rotate Video">
+                            <MenuItem Header="0° (Normal)" Command="{Binding RotateVideoCommand}" CommandParameter="0" />
+                            <MenuItem Header="90° Clockwise" Command="{Binding RotateVideoCommand}" CommandParameter="90" />
+                            <MenuItem Header="180° Inverted" Command="{Binding RotateVideoCommand}" CommandParameter="180" />
+                            <MenuItem Header="270° Counter-Clockwise" Command="{Binding RotateVideoCommand}" CommandParameter="270" />
                         </MenuItem>
                         <MenuItem Header="Technical Info" Command="{Binding ToggleInfoModalCommand}" InputGesture="Ctrl+I" />
                         <MenuItem Header="Take Snapshot" Command="{Binding TakeSnapshotCommand}" InputGesture="Ctrl+S" />
@@ -598,6 +607,84 @@
                     <Button Classes="iris-menu-item" Click="OnAddExternalSubtitleClick" Background="#18FFFFFF">
                         <TextBlock Text="+ Load Subtitle File..." FontSize="11" HorizontalAlignment="Center" Foreground="{StaticResource AccentLiquidBrush}" FontWeight="SemiBold" />
                     </Button>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- ================= LAYER 7: TECHNICAL INFO OVERLAY MODAL ================= -->
+        <Border IsVisible="{Binding IsInfoModalOpen}"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Width="420"
+                Background="#F2121215"
+                BorderBrush="#282830"
+                BorderThickness="1"
+                CornerRadius="12"
+                Padding="20"
+                BoxShadow="0 12 40 #A0000000">
+            <StackPanel Spacing="14">
+                <!-- Modal Header -->
+                <Grid ColumnDefinitions="*, Auto">
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                        <Border Background="#1A388BFD" CornerRadius="6" Padding="6,3">
+                            <TextBlock Text="CORE ENGINE" FontSize="10" FontWeight="Bold" Foreground="#388BFD" />
+                        </Border>
+                        <TextBlock Text="Technical Diagnostics" FontSize="13" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <Button Grid.Column="1" Classes="iris-btn" Command="{Binding ToggleInfoModalCommand}" Padding="2" Height="22" Width="22">
+                        <PathIcon Data="{StaticResource CloseIcon}" Width="10" Height="10" Foreground="#AAAAAA" />
+                    </Button>
+                </Grid>
+
+                <Border BorderBrush="#14FFFFFF" BorderThickness="0,1,0,0" />
+
+                <!-- Telemetry Stack -->
+                <StackPanel Spacing="8">
+                    <!-- Resolution & Aspect Ratio -->
+                    <Grid ColumnDefinitions="140,*">
+                        <TextBlock Grid.Column="0" Text="Resolution:" FontSize="11" Foreground="#888890" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="{Binding CurrentStats.FormattedResolution, FallbackValue='N/A'}" FontSize="11" FontWeight="Medium" Foreground="#FFFFFF" />
+                    </Grid>
+
+                    <!-- Hardware Acceleration -->
+                    <Grid ColumnDefinitions="140,*">
+                        <TextBlock Grid.Column="0" Text="Hardware Decoder:" FontSize="11" Foreground="#888890" VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="{Binding CurrentStats.HardwareDecoder, FallbackValue='Auto (Safe)'}" FontSize="11" FontWeight="Medium" Foreground="#4EC9B0" />
+                            <Border Background="#204EC9B0" CornerRadius="4" Padding="4,1" IsVisible="{Binding CurrentStats.IsHardwareAccelerated, FallbackValue=false}">
+                                <TextBlock Text="Active" FontSize="9" FontWeight="Bold" Foreground="#4EC9B0" />
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Codecs -->
+                    <Grid ColumnDefinitions="140,*">
+                        <TextBlock Grid.Column="0" Text="Video Codec:" FontSize="11" Foreground="#888890" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="{Binding VideoCodec, FallbackValue='Unknown'}" FontSize="11" Foreground="#CCCCCC" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="140,*">
+                        <TextBlock Grid.Column="0" Text="Audio Codec:" FontSize="11" Foreground="#888890" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="{Binding AudioCodec, FallbackValue='Unknown'}" FontSize="11" Foreground="#CCCCCC" />
+                    </Grid>
+
+                    <!-- FPS & Frame Drop -->
+                    <Grid ColumnDefinitions="140,*">
+                        <TextBlock Grid.Column="0" Text="Framerate:" FontSize="11" Foreground="#888890" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="{Binding CurrentStats.FormattedFps, FallbackValue='0 fps'}" FontSize="11" Foreground="#FFFFFF" />
+                    </Grid>
+
+                    <!-- Bitrate -->
+                    <Grid ColumnDefinitions="140,*">
+                        <TextBlock Grid.Column="0" Text="Video Bitrate:" FontSize="11" Foreground="#888890" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="{Binding CurrentStats.FormattedVideoBitrate, FallbackValue='N/A'}" FontSize="11" Foreground="#CCCCCC" />
+                    </Grid>
+
+                    <!-- Cache Buffer -->
+                    <Grid ColumnDefinitions="140,*">
+                        <TextBlock Grid.Column="0" Text="Demuxer Cache:" FontSize="11" Foreground="#888890" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="{Binding CurrentStats.FormattedCache, FallbackValue='100%'}" FontSize="11" Foreground="#CCCCCC" />
+                    </Grid>
                 </StackPanel>
             </StackPanel>
         </Border>

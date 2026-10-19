@@ -6,6 +6,7 @@ using System.Linq;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CorePlayer.Engine;
 using CorePlayer.Models;
 using CorePlayer.Services;
 using HanumanInstitute.LibMpv;
@@ -112,6 +113,15 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     private bool _isInfoModalOpen;
 
     [ObservableProperty]
+    private PlaybackStatistics? _currentStats;
+
+    [ObservableProperty]
+    private bool _isNightMode;
+
+    [ObservableProperty]
+    private string _statsDisplay = string.Empty;
+
+    [ObservableProperty]
     private bool _isMoreMenuOpen;
 
     public string SpeedDisplayUpper => $"{Speed:0.##}X";
@@ -201,6 +211,7 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         _playback.MediaOpened += OnMediaOpened;
         _playback.MediaEnded += OnMediaEnded;
         _playback.TracksChanged += OnTracksChanged;
+        _playback.StatisticsUpdated += OnStatisticsUpdated;
 
         _controlsTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2.5) };
         _controlsTimer.Tick += (_, _) =>
@@ -265,6 +276,7 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         VideoCodec = _playback.VideoCodec ?? "H.264/HEVC";
         AudioCodec = _playback.AudioCodec ?? "AAC/Opus";
         Resolution = _playback.Resolution ?? "1920x1080";
+        CurrentStats = _playback.GetCurrentStatistics();
 
         // Check if smart auto-resume is available
         if (!string.IsNullOrWhiteSpace(_playback.CurrentFilePath))
@@ -277,6 +289,15 @@ public partial class MainViewModel : ViewModelBase, IDisposable
                 ShowResumePrompt = true;
             }
         }
+    }
+
+    private void OnStatisticsUpdated(object? sender, PlaybackStatistics stats)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            CurrentStats = stats;
+            StatsDisplay = $"{stats.FormattedResolution} | {stats.FormattedFps} | {stats.FormattedVideoBitrate}";
+        });
     }
 
     private void OnMediaEnded(object? sender, EventArgs e)
@@ -683,6 +704,7 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         {
             IsQueueOpen = false;
             IsTracksMenuOpen = false;
+            CurrentStats = _playback.GetCurrentStatistics();
         }
     }
 
@@ -877,6 +899,53 @@ public partial class MainViewModel : ViewModelBase, IDisposable
             _playback.AddSubtitleFile(path);
             ShowToast($"Subtitle loaded: {Path.GetFileName(path)}");
         }
+    }
+
+    [RelayCommand]
+    public void ToggleNightMode()
+    {
+        _playback.ToggleNightMode();
+        IsNightMode = _playback.IsNightModeActive;
+        ShowToast(IsNightMode ? "Night Mode (Dialogue Boost): ON" : "Night Mode (Dialogue Boost): OFF");
+    }
+
+    [RelayCommand]
+    public void RotateVideo(object? parameter)
+    {
+        int degrees = 0;
+        if (parameter is int d) degrees = d;
+        else if (parameter is string s && int.TryParse(s, out var parsed)) degrees = parsed;
+
+        var rotation = degrees switch
+        {
+            90 => VideoRotation.Rotate90,
+            180 => VideoRotation.Rotate180,
+            270 => VideoRotation.Rotate270,
+            _ => VideoRotation.Normal
+        };
+
+        _playback.SetRotation(rotation);
+        ShowToast($"Video Rotation: {degrees}°");
+    }
+
+    [RelayCommand]
+    public void CycleAudioTrack()
+    {
+        if (AudioTracks.Count <= 1) return;
+        int currentIdx = AudioTracks.ToList().FindIndex(t => t.IsSelected);
+        int nextIdx = (currentIdx + 1) % AudioTracks.Count;
+        var nextTrack = AudioTracks[nextIdx];
+        SelectTrack(nextTrack);
+    }
+
+    [RelayCommand]
+    public void CycleSubtitleTrack()
+    {
+        if (SubtitleTracks.Count == 0) return;
+        int currentIdx = SubtitleTracks.ToList().FindIndex(t => t.IsSelected);
+        int nextIdx = (currentIdx + 1) % SubtitleTracks.Count;
+        var nextTrack = SubtitleTracks[nextIdx];
+        SelectTrack(nextTrack);
     }
 
     public void Dispose()

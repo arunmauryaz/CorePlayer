@@ -33,5 +33,21 @@ public class EngineTypesTests
         Assert.Equal("14.5 Mbps", stats.FormattedVideoBitrate);
         Assert.Equal("4K UHD (3840x2160)", stats.FormattedResolution);
         Assert.True(stats.IsHardwareAccelerated);
+        Assert.Equal("59.94 fps", stats.FormattedFps);
+    }
+
+    [Fact]
+    public void PlaybackStatistics_FormatsFpsAndCache_WithDrops()
+    {
+        var stats = new PlaybackStatistics
+        {
+            Fps = 23.976,
+            DroppedFrames = 4,
+            CacheFillPercent = 85.5,
+            CacheTime = TimeSpan.FromSeconds(12.3)
+        };
+
+        Assert.Equal("23.98 fps (4 dropped)", stats.FormattedFps);
+        Assert.Equal("85.5% (12.3s ahead)", stats.FormattedCache);
     }
 }
