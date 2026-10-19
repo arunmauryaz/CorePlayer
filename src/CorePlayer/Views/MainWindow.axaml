@@ -11,6 +11,7 @@
         MinWidth="540" MinHeight="320"
         WindowStartupLocation="CenterScreen"
         ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome"
         ExtendClientAreaTitleBarHeightHint="32"
         Background="#000000"
         Topmost="{Binding IsAlwaysOnTop}">
@@ -119,24 +120,15 @@
                        Foreground="#EEEEEE" />
         </Border>
 
-        <!-- ================= LAYER 2: SLIM TOP BAR WITH VLC-STYLE GLASS MENUS & PIN ================= -->
-        <!-- Native Windows caption buttons render in top right in windowed mode; in fullscreen, margin adapts so top-right controls are accessible -->
+        <!-- ================= LAYER 2: SLIM TOP BAR WITH VLC-STYLE GLASS MENUS & CONTROLS ================= -->
         <Border x:Name="TopBarBorder"
                 VerticalAlignment="Top"
                 Height="36"
                 Background="Transparent"
                 Padding="12,0,0,0"
+                Margin="0,0,6,0"
                 PointerPressed="OnTopBarPointerPressed"
-                IsVisible="{Binding IsControlsVisible}"
-                Classes.fullscreen="{Binding IsFullscreen}">
-            <Border.Styles>
-                <Style Selector="Border#TopBarBorder">
-                    <Setter Property="Margin" Value="0,0,140,0" />
-                </Style>
-                <Style Selector="Border#TopBarBorder.fullscreen">
-                    <Setter Property="Margin" Value="0,0,8,0" />
-                </Style>
-            </Border.Styles>
+                IsVisible="{Binding IsControlsVisible}">
             <Grid ColumnDefinitions="Auto, *, Auto" VerticalAlignment="Center">
                 <!-- 1. Glassmorphic VLC-style Top Menu (No Logo or Brand Name) -->
                 <Menu Grid.Column="0" Classes="iris-top-menu" VerticalAlignment="Center">
@@ -218,31 +210,36 @@
                                ToolTip.Tip="{Binding HeaderTitleText}" />
                 </Grid>
 
-                <!-- 3. Top-Right Controls (Pin + Dedicated Fullscreen Window Controls) -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                <!-- 3. Top-Right Window Controls (Pin, Minimize, Maximize/Restore, Close) - Fixed permanently across all modes -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center" Margin="0,0,4,0">
                     <!-- Pin (Always On Top) Icon Button with Tilt / Straight state -->
                     <Button Classes="iris-pin-btn"
                             Classes.pinned="{Binding IsAlwaysOnTop}"
                             Command="{Binding ToggleAlwaysOnTopCommand}"
                             ToolTip.Tip="Always on Top (Pin)"
-                            VerticalAlignment="Center"
-                            Margin="0,0,4,0">
+                            VerticalAlignment="Center">
                         <PathIcon Data="{StaticResource PinIcon}"
                                   Width="15" Height="15"
                                   Classes="liquid-icon" />
                     </Button>
 
-                    <!-- Fullscreen Window Controls (Shown only in fullscreen when native caption buttons are hidden) -->
-                    <StackPanel Orientation="Horizontal" Spacing="2" IsVisible="{Binding IsFullscreen}" VerticalAlignment="Center" Margin="4,0,4,0">
-                        <!-- Exit Fullscreen -->
-                        <Button Classes="iris-btn" Command="{Binding ToggleFullscreenCommand}" ToolTip.Tip="Exit Fullscreen (F / Esc)" Width="28" Height="28">
-                            <PathIcon Data="{StaticResource ExitFullscreenIcon}" Width="14" Height="14" Classes="liquid-icon" />
-                        </Button>
-                        <!-- Close -->
-                        <Button Classes="iris-btn iris-close-btn" Click="OnCloseClick" ToolTip.Tip="Close (Alt+F4)" Width="28" Height="28">
-                            <PathIcon Data="{StaticResource CloseIcon}" Width="10" Height="10" Classes="liquid-icon" />
-                        </Button>
-                    </StackPanel>
+                    <!-- Minimize -->
+                    <Button Classes="iris-btn" Click="OnMinimizeClick" ToolTip.Tip="Minimize" Width="28" Height="28">
+                        <PathIcon Data="{StaticResource MinimizeIcon}" Width="12" Height="12" Classes="liquid-icon" />
+                    </Button>
+
+                    <!-- Maximize / Restore (The Box Button) -->
+                    <Button Classes="iris-btn" Click="OnMaximizeClick" ToolTip.Tip="Maximize / Restore" Width="28" Height="28">
+                        <Panel>
+                            <PathIcon Data="{StaticResource RestoreIcon}" Width="12" Height="12" Classes="liquid-icon" IsVisible="{Binding IsFullscreen}" />
+                            <PathIcon Data="{StaticResource MaximizeIcon}" Width="12" Height="12" Classes="liquid-icon" IsVisible="{Binding !IsFullscreen}" />
+                        </Panel>
+                    </Button>
+
+                    <!-- Close / Quit -->
+                    <Button Classes="iris-btn iris-close-btn" Click="OnCloseClick" ToolTip.Tip="Close (Alt+F4)" Width="28" Height="28">
+                        <PathIcon Data="{StaticResource CloseIcon}" Width="10" Height="10" Classes="liquid-icon" />
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>

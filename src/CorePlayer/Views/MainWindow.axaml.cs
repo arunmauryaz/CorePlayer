@@ -61,7 +61,6 @@ public partial class MainWindow : Window
                     try
                     {
                         ViewModel.IsFullscreen = isFs;
-                        ExtendClientAreaToDecorationsHint = !isFs;
                     }
                     finally
                     {
@@ -112,13 +111,11 @@ public partial class MainWindow : Window
                 if (WindowState != WindowState.FullScreen)
                 {
                     _previousWindowState = WindowState == WindowState.FullScreen ? WindowState.Normal : WindowState;
-                    ExtendClientAreaToDecorationsHint = false;
                     WindowState = WindowState.FullScreen;
                 }
             }
             else
             {
-                ExtendClientAreaToDecorationsHint = true;
                 WindowState = _previousWindowState == WindowState.FullScreen ? WindowState.Normal : _previousWindowState;
             }
         }
@@ -538,6 +535,19 @@ public partial class MainWindow : Window
 
     private void OnMaximizeClick(object? sender, RoutedEventArgs e)
     {
+        if (WindowState == WindowState.FullScreen || ViewModel?.IsFullscreen == true)
+        {
+            if (ViewModel != null)
+            {
+                ViewModel.IsFullscreen = false;
+            }
+            else
+            {
+                WindowState = _previousWindowState == WindowState.FullScreen ? WindowState.Normal : _previousWindowState;
+            }
+            return;
+        }
+
         WindowState = WindowState == WindowState.Maximized 
             ? WindowState.Normal 
             : WindowState.Maximized;
