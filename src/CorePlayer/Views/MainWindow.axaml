@@ -51,40 +51,6 @@
         </Grid>
 
         <!-- ================= LAYER 1: QUIET HUD, PROMPT & TOAST OVERLAYS ================= -->
-        <!-- Quiet Auto-Resume Prompt -->
-        <Border IsVisible="{Binding ShowResumePrompt}"
-                VerticalAlignment="Top"
-                HorizontalAlignment="Center"
-                Margin="0,44,0,0"
-                Background="#EE141416"
-                BorderBrush="#33FFFFFF"
-                BorderThickness="1"
-                CornerRadius="6"
-                Padding="14,6">
-            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                <TextBlock Text="{Binding ResumeTimeText, StringFormat='Resume from {0}?'}"
-                           FontSize="12"
-                           Foreground="#EEEEEE"
-                           VerticalAlignment="Center"
-                           FontFamily="{StaticResource MonospaceFont}" />
-
-                <Button Classes="iris-btn"
-                        Command="{Binding ResumeFromPromptCommand}"
-                        Padding="8,2"
-                        Height="24"
-                        Width="NaN">
-                    <TextBlock Text="Resume" FontWeight="SemiBold" Foreground="{StaticResource AccentLiquidBrush}" FontSize="12" />
-                </Button>
-
-                <Button Classes="iris-btn"
-                        Command="{Binding DismissResumePromptCommand}"
-                        Padding="8,2"
-                        Height="24"
-                        Width="NaN">
-                    <TextBlock Text="Start Over" Foreground="#888888" FontSize="11" />
-                </Button>
-            </StackPanel>
-        </Border>
 
         <!-- YouTube-Style Left Skip HUD (Rewind) -->
         <Border IsVisible="{Binding IsSkipBackwardHudVisible}"

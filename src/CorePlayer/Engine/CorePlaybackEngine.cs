@@ -123,6 +123,11 @@ public class CorePlaybackEngine : ICorePlaybackEngine
                 }
             }
         }
+
+        // Explicitly suppress MPV's built-in OSD bar and OSD seek overlays
+        try { _context.SetPropertyString("osd-bar", "no"); } catch { }
+        try { _context.SetPropertyString("osd-on-seek", "no"); } catch { }
+        try { _context.SetPropertyString("osd-level", "0"); } catch { }
     }
 
     public void AttachContext(MpvContext context)
@@ -217,6 +222,23 @@ public class CorePlaybackEngine : ICorePlaybackEngine
         _duration = TimeSpan.Zero;
         _eofHandled = false;
 
+        if (startPosition > 0)
+        {
+            try
+            {
+                _context.Option["start"].Set(startPosition.ToString(CultureInfo.InvariantCulture));
+            }
+            catch { }
+        }
+        else
+        {
+            try
+            {
+                _context.Option["start"].Set("none");
+            }
+            catch { }
+        }
+
         _context.RunCommand(default, "loadfile", mediaPath);
 
         if (startPosition > 0)
@@ -297,7 +319,7 @@ public class CorePlaybackEngine : ICorePlaybackEngine
         var secStr = seconds.ToString(CultureInfo.InvariantCulture);
         try
         {
-            _context.RunCommandString($"seek {secStr} absolute+keyframes");
+            _context.RunCommandString($"no-osd seek {secStr} absolute+keyframes");
         }
         catch
         {
@@ -316,7 +338,7 @@ public class CorePlaybackEngine : ICorePlaybackEngine
         var secStr = seconds.ToString(CultureInfo.InvariantCulture);
         try
         {
-            _context.RunCommandString($"seek {secStr} absolute+exact");
+            _context.RunCommandString($"no-osd seek {secStr} absolute+exact");
         }
         catch
         {
@@ -338,7 +360,7 @@ public class CorePlaybackEngine : ICorePlaybackEngine
         _volume = volume;
         try
         {
-            _context.RunCommandString($"set volume {volume}");
+            _context.RunCommandString($"no-osd set volume {volume}");
         }
         catch
         {

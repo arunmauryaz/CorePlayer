@@ -42,7 +42,15 @@ public class MainViewModelTests
         public event EventHandler<PlaybackStatistics>? StatisticsUpdated;
 #pragma warning restore CS0067
 
-        public void Load(string filePath, double startPosition = 0) { CurrentFilePath = filePath; MediaOpened?.Invoke(this, EventArgs.Empty); }
+        public void Load(string filePath, double startPosition = 0)
+        {
+            CurrentFilePath = filePath;
+            if (startPosition > 0)
+            {
+                Position = TimeSpan.FromSeconds(startPosition);
+            }
+            MediaOpened?.Invoke(this, EventArgs.Empty);
+        }
         public void Play() { IsPlaying = true; PlaybackStateChanged?.Invoke(this, EventArgs.Empty); }
         public void Pause() { IsPlaying = false; PlaybackStateChanged?.Invoke(this, EventArgs.Empty); }
         public void TogglePlayPause() { IsPlaying = !IsPlaying; PlaybackStateChanged?.Invoke(this, EventArgs.Empty); }
@@ -79,10 +87,11 @@ public class MainViewModelTests
 
     private class FakeStorageService : IStorageService
     {
+        private readonly Dictionary<string, double> _positions = new();
         public PlayerSettings LoadSettings() => new() { Volume = 100, Speed = 1.0 };
         public void SaveSettings(PlayerSettings settings) { }
-        public double? GetPlaybackPosition(string filePath) => null;
-        public void SavePlaybackPosition(string filePath, double positionSeconds, double durationSeconds) { }
+        public double? GetPlaybackPosition(string filePath) => _positions.TryGetValue(filePath, out var pos) ? pos : null;
+        public void SavePlaybackPosition(string filePath, double positionSeconds, double durationSeconds) => _positions[filePath] = positionSeconds;
         public List<PlaybackHistoryItem> GetRecentFiles(int limit = 10) => [];
     }
 
@@ -226,5 +235,24 @@ public class MainViewModelTests
 
         playback.Pause();
         Assert.True(vm.IsControlsVisible);
+    }
+
+    [Fact]
+    public void WhenMediaOpenedWithSavedPosition_AutomaticallyResumesWithoutPrompt()
+    {
+        var playback = new FakePlaybackService();
+        var storage = new FakeStorageService();
+        playback.CurrentFilePath = "D:\\Videos\\anime.mp4";
+        playback.Duration = TimeSpan.FromMinutes(20);
+        storage.SavePlaybackPosition("D:\\Videos\\anime.mp4", 350.0, 1200.0);
+
+        using var vm = new MainViewModel(playback, storage);
+
+        playback.Load("D:\\Videos\\anime.mp4");
+
+        Assert.False(vm.ShowResumePrompt);
+        Assert.Equal(350.0, playback.Position.TotalSeconds);
+        Assert.True(vm.IsToastVisible);
+        Assert.Contains("Resumed playback", vm.ToastMessage);
     }
 }

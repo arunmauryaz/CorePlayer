@@ -10,6 +10,9 @@ public class HardwarePipelineBuilder
         {
             ["keep-open"] = "yes",
             ["sub-auto"] = "fuzzy",
+            ["osd-bar"] = "no",
+            ["osd-on-seek"] = "no",
+            ["osd-level"] = "0",
             ["audio-pitch-correction"] = options.AudioPitchCorrection ? "yes" : "no",
             ["demuxer-max-bytes"] = options.DemuxerMaxBytes.ToString(),
             ["demuxer-max-back-bytes"] = options.DemuxerMaxBackBytes.ToString(),

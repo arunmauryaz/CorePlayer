@@ -342,17 +342,19 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         Resolution = _playback.Resolution ?? "1920x1080";
         CurrentStats = _playback.GetCurrentStatistics();
 
-        // Check if smart auto-resume is available
+        // Automatically start the video from the place it was last played
         if (!string.IsNullOrWhiteSpace(_playback.CurrentFilePath))
         {
             var savedPos = _storage.GetPlaybackPosition(_playback.CurrentFilePath);
-            if (savedPos.HasValue && savedPos.Value > 10 && savedPos.Value < _playback.Duration.TotalSeconds - 10)
+            if (savedPos.HasValue && savedPos.Value > 5 && (_playback.Duration.TotalSeconds <= 10 || savedPos.Value < _playback.Duration.TotalSeconds - 10))
             {
                 _pendingResumePosition = savedPos.Value;
                 ResumeTimeText = FormatTime(TimeSpan.FromSeconds(savedPos.Value));
-                ShowResumePrompt = true;
+                _playback.ExactSeek(savedPos.Value);
+                ShowToast($"Resumed playback at {ResumeTimeText}");
             }
         }
+        ShowResumePrompt = false;
     }
 
     private void OnStatisticsUpdated(object? sender, PlaybackStatistics stats)
@@ -526,7 +528,8 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         ShowResumePrompt = false;
         HasMedia = true;
 
-        _playback.Load(item.FilePath);
+        var savedPos = _storage.GetPlaybackPosition(item.FilePath) ?? 0;
+        _playback.Load(item.FilePath, savedPos);
         MediaTitle = item.Title;
         UpdateHeaderTitle();
         ShowControls();
