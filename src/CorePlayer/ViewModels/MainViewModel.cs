@@ -236,12 +236,18 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         _playback.TracksChanged += OnTracksChanged;
         _playback.StatisticsUpdated += OnStatisticsUpdated;
 
-        _controlsTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2.5) };
+        _controlsTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2.0) };
         _controlsTimer.Tick += (_, _) =>
         {
-            if (IsPlaying && !IsQueueOpen && !IsTracksMenuOpen && !IsInfoModalOpen)
+            if (IsPlaying && !IsQueueOpen && !IsTracksMenuOpen && !IsInfoModalOpen && !IsMoreMenuOpen)
             {
                 IsControlsVisible = false;
+                ShowResumePrompt = false;
+                _controlsTimer.Stop();
+            }
+            else if (!IsPlaying)
+            {
+                _controlsTimer.Stop();
             }
         };
 
@@ -281,6 +287,7 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         else
         {
             IsControlsVisible = true;
+            _controlsTimer.Stop();
         }
     }
 
@@ -289,6 +296,13 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         _isUpdatingPositionFromPlayback = true;
         try
         {
+            if (!IsPlaying && _playback.IsPlaying)
+            {
+                IsPlaying = true;
+                _controlsTimer.Stop();
+                _controlsTimer.Start();
+            }
+
             PositionSeconds = _playback.Position.TotalSeconds;
             PositionFormatted = FormatTime(_playback.Position);
 

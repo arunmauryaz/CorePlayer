@@ -19,6 +19,8 @@ public partial class MainWindow : Window
     private MainViewModel? ViewModel => DataContext as MainViewModel;
     private WindowState _previousWindowState = WindowState.Normal;
     private DispatcherTimer? _canvasClickTimer;
+    private Point _lastPointerPosition;
+    private readonly Cursor _hiddenCursor = new(StandardCursorType.None);
 
     public MainWindow()
     {
@@ -44,6 +46,7 @@ public partial class MainWindow : Window
         AddHandler(DragDrop.DragOverEvent, OnDragOver);
         AddHandler(DragDrop.DragEnterEvent, OnDragEnter);
         AddHandler(DragDrop.DragLeaveEvent, OnDragLeave);
+        AddHandler(InputElement.PointerMovedEvent, OnWindowPointerMoved, RoutingStrategies.Tunnel);
 
         this.GetPropertyChangedObservable(WindowStateProperty).Subscribe(_ =>
         {
@@ -110,11 +113,17 @@ public partial class MainWindow : Window
     {
         if (ViewModel != null && !ViewModel.IsControlsVisible && ViewModel.IsPlaying)
         {
-            Cursor = new Cursor(StandardCursorType.None);
+            if (Cursor != _hiddenCursor)
+            {
+                Cursor = _hiddenCursor;
+            }
         }
         else
         {
-            Cursor = Cursor.Default;
+            if (Cursor != Cursor.Default)
+            {
+                Cursor = Cursor.Default;
+            }
         }
     }
 
@@ -202,13 +211,31 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnVideoAreaPointerMoved(object? sender, PointerEventArgs e)
+    private void OnWindowPointerMoved(object? sender, PointerEventArgs e)
     {
+        var currentPoint = e.GetPosition(this);
+        var deltaX = Math.Abs(currentPoint.X - _lastPointerPosition.X);
+        var deltaY = Math.Abs(currentPoint.Y - _lastPointerPosition.Y);
+
+        // Filter out tiny jitter or synthetic pointer messages (e.g. emitted when Cursor is changed)
+        if (deltaX < 2 && deltaY < 2)
+        {
+            return;
+        }
+
+        _lastPointerPosition = currentPoint;
+
         if (Cursor != Cursor.Default)
         {
             Cursor = Cursor.Default;
         }
+
         ViewModel?.ShowControls();
+    }
+
+    private void OnVideoAreaPointerMoved(object? sender, PointerEventArgs e)
+    {
+        OnWindowPointerMoved(sender, e);
     }
 
     private void OnVideoAreaPointerPressed(object? sender, PointerPressedEventArgs e)

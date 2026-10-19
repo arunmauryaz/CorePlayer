@@ -199,4 +199,32 @@ public class MainViewModelTests
         vm.ToggleFullscreen();
         Assert.False(vm.IsFullscreen);
     }
+
+    [Fact]
+    public void ShowControls_EnsuresControlsAreVisible()
+    {
+        var playback = new FakePlaybackService();
+        var storage = new FakeStorageService();
+        using var vm = new MainViewModel(playback, storage);
+
+        vm.IsControlsVisible = false;
+        Assert.False(vm.IsControlsVisible);
+
+        vm.ShowControls();
+        Assert.True(vm.IsControlsVisible);
+    }
+
+    [Fact]
+    public void WhenPlaybackPauses_ControlsBecomeVisible()
+    {
+        var playback = new FakePlaybackService();
+        var storage = new FakeStorageService();
+        using var vm = new MainViewModel(playback, storage);
+
+        playback.Play();
+        vm.IsControlsVisible = false;
+
+        playback.Pause();
+        Assert.True(vm.IsControlsVisible);
+    }
 }
