@@ -6,7 +6,10 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
+using CorePlayer.Engine;
+using CorePlayer.Services;
 using CorePlayer.ViewModels;
 
 namespace CorePlayer.Views;
@@ -15,10 +18,27 @@ public partial class MainWindow : Window
 {
     private MainViewModel? ViewModel => DataContext as MainViewModel;
     private WindowState _previousWindowState = WindowState.Normal;
+    private DispatcherTimer? _canvasClickTimer;
 
     public MainWindow()
     {
         InitializeComponent();
+
+        if (PlayerView.MpvContext != null)
+        {
+            var engine = new CorePlaybackEngine(PlayerView.MpvContext);
+            var playback = new MpvPlaybackService(engine);
+            var storage = new StorageService();
+            DataContext = new MainViewModel(playback, storage);
+        }
+
+        PlayerView.ViewInitialized += (s, e) =>
+        {
+            if (PlayerView.MpvContext != null && ViewModel != null)
+            {
+                ViewModel.AttachMpvContext(PlayerView.MpvContext);
+            }
+        };
 
         AddHandler(DragDrop.DropEvent, OnFileDrop);
         AddHandler(DragDrop.DragOverEvent, OnDragOver);
@@ -181,6 +201,24 @@ public partial class MainWindow : Window
             if (!ViewModel.HasMedia && e.GetCurrentPoint(this).Properties.IsLeftButtonPressed && WindowState != WindowState.FullScreen)
             {
                 BeginMoveDrag(e);
+                return;
+            }
+
+            // Single click on video canvas toggles Play/Pause (delayed slightly to allow double-click fullscreen)
+            if (ViewModel.HasMedia && e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            {
+                if (_canvasClickTimer == null)
+                {
+                    _canvasClickTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(220) };
+                    _canvasClickTimer.Tick += (_, _) =>
+                    {
+                        _canvasClickTimer.Stop();
+                        ViewModel?.TogglePlayPause();
+                    };
+                }
+
+                _canvasClickTimer.Stop();
+                _canvasClickTimer.Start();
             }
         }
     }
@@ -205,7 +243,133 @@ public partial class MainWindow : Window
 
     private void OnVideoAreaDoubleTapped(object? sender, TappedEventArgs e)
     {
+        _canvasClickTimer?.Stop();
         ViewModel?.ToggleFullscreen();
+    }
+
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+
+        if (ViewModel == null) return;
+        if (FocusManager?.GetFocusedElement() is TextBox) return;
+
+        switch (e.Key)
+        {
+            case Key.Space:
+                ViewModel.TogglePlayPause();
+                e.Handled = true;
+                break;
+
+            case Key.Left:
+                if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+                    ViewModel.PlayPreviousTrack();
+                else
+                    ViewModel.SeekBackward10();
+                e.Handled = true;
+                break;
+
+            case Key.Right:
+                if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+                    ViewModel.PlayNextTrack();
+                else
+                    ViewModel.SeekForward10();
+                e.Handled = true;
+                break;
+
+            case Key.Up:
+                ViewModel.VolumeUp();
+                e.Handled = true;
+                break;
+
+            case Key.Down:
+                ViewModel.VolumeDown();
+                e.Handled = true;
+                break;
+
+            case Key.M:
+                ViewModel.ToggleMute();
+                e.Handled = true;
+                break;
+
+            case Key.F:
+            case Key.F11:
+                ViewModel.ToggleFullscreen();
+                e.Handled = true;
+                break;
+
+            case Key.Escape:
+                if (ViewModel.IsFullscreen)
+                {
+                    ViewModel.ToggleFullscreen();
+                    e.Handled = true;
+                }
+                else if (ViewModel.IsTracksMenuOpen || ViewModel.IsMoreMenuOpen || ViewModel.IsQueueOpen || ViewModel.IsInfoModalOpen)
+                {
+                    ViewModel.IsTracksMenuOpen = false;
+                    ViewModel.IsMoreMenuOpen = false;
+                    ViewModel.IsQueueOpen = false;
+                    ViewModel.IsInfoModalOpen = false;
+                    e.Handled = true;
+                }
+                break;
+
+            case Key.Q:
+                ViewModel.ToggleQueue();
+                e.Handled = true;
+                break;
+
+            case Key.T:
+            case Key.C:
+                ViewModel.ToggleTracksMenu();
+                e.Handled = true;
+                break;
+
+            case Key.I:
+                ViewModel.ToggleInfoModal();
+                e.Handled = true;
+                break;
+
+            case Key.S:
+                ViewModel.TakeSnapshot();
+                e.Handled = true;
+                break;
+
+            case Key.OemPeriod:
+                ViewModel.StepFrame(true);
+                e.Handled = true;
+                break;
+
+            case Key.OemComma:
+                ViewModel.StepFrame(false);
+                e.Handled = true;
+                break;
+
+            case Key.B:
+                ViewModel.CycleAudioTrack();
+                e.Handled = true;
+                break;
+
+            case Key.V:
+                ViewModel.CycleSubtitleTrack();
+                e.Handled = true;
+                break;
+
+            case Key.N when e.KeyModifiers.HasFlag(KeyModifiers.Shift):
+                ViewModel.PlayNextTrack();
+                e.Handled = true;
+                break;
+
+            case Key.P when e.KeyModifiers.HasFlag(KeyModifiers.Shift):
+                ViewModel.PlayPreviousTrack();
+                e.Handled = true;
+                break;
+
+            case Key.O when e.KeyModifiers.HasFlag(KeyModifiers.Control):
+                OnOpenFileClick(this, new RoutedEventArgs());
+                e.Handled = true;
+                break;
+        }
     }
 
     private async void OnOpenFileClick(object? sender, RoutedEventArgs e)

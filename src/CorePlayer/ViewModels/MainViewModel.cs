@@ -25,8 +25,15 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     private double _pendingResumePosition;
     private bool _isDisposed;
     private int _unmutedVolume = 100;
+    private bool _isUpdatingPositionFromPlayback;
 
     public MpvContext MpvContext => _playback.Context;
+
+    public void AttachMpvContext(MpvContext context)
+    {
+        _playback.AttachContext(context);
+        OnPropertyChanged(nameof(MpvContext));
+    }
 
     [ObservableProperty]
     private string _mediaTitle = string.Empty;
@@ -253,17 +260,34 @@ public partial class MainViewModel : ViewModelBase, IDisposable
 
     private void OnPositionChanged(object? sender, EventArgs e)
     {
-        PositionSeconds = _playback.Position.TotalSeconds;
-        PositionFormatted = FormatTime(_playback.Position);
-
-        var remaining = _playback.Duration - _playback.Position;
-        TimeRemainingFormatted = "-" + FormatTime(remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero);
-
-        // Periodically save resume position (every ~5 seconds)
-        if (HasMedia && !string.IsNullOrWhiteSpace(_playback.CurrentFilePath) && _playback.Position.TotalSeconds > 5)
+        _isUpdatingPositionFromPlayback = true;
+        try
         {
-            _storage.SavePlaybackPosition(_playback.CurrentFilePath, _playback.Position.TotalSeconds, _playback.Duration.TotalSeconds);
+            PositionSeconds = _playback.Position.TotalSeconds;
+            PositionFormatted = FormatTime(_playback.Position);
+
+            var remaining = _playback.Duration - _playback.Position;
+            TimeRemainingFormatted = "-" + FormatTime(remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero);
+
+            // Periodically save resume position (every ~5 seconds)
+            if (HasMedia && !string.IsNullOrWhiteSpace(_playback.CurrentFilePath) && _playback.Position.TotalSeconds > 5)
+            {
+                _storage.SavePlaybackPosition(_playback.CurrentFilePath, _playback.Position.TotalSeconds, _playback.Duration.TotalSeconds);
+            }
         }
+        finally
+        {
+            _isUpdatingPositionFromPlayback = false;
+        }
+    }
+
+    partial void OnPositionSecondsChanged(double value)
+    {
+        if (_isUpdatingPositionFromPlayback) return;
+        if (!HasMedia) return;
+
+        _playback.ExactSeek(value);
+        PositionFormatted = FormatTime(TimeSpan.FromSeconds(value));
     }
 
     private void OnMediaOpened(object? sender, EventArgs e)

@@ -53,4 +53,5 @@ public interface ICorePlaybackEngine : IDisposable
     void StepFrame(bool forward = true);
     string TakeSnapshot(bool includeSubtitles = true);
     PlaybackStatistics GetCurrentStatistics();
+    void AttachContext(MpvContext context);
 }

@@ -10,7 +10,8 @@ namespace CorePlayer.Engine;
 
 public class CorePlaybackEngine : ICorePlaybackEngine
 {
-    private readonly MpvContext _context;
+    private MpvContext _context;
+    private bool _ownsContext;
     private readonly DispatcherTimer _pollTimer;
     private readonly HardwarePipelineBuilder _pipelineBuilder = new();
     private readonly AudioSubsystem _audioSubsystem = new();
@@ -81,11 +82,28 @@ public class CorePlaybackEngine : ICorePlaybackEngine
         }
     }
 
-    public CorePlaybackEngine(EngineOptions? options = null)
+    public CorePlaybackEngine(EngineOptions? options = null) : this(null, options)
+    {
+    }
+
+    public CorePlaybackEngine(MpvContext? context, EngineOptions? options = null)
     {
         _options = options ?? new EngineOptions();
-        _context = new MpvContext();
+        _ownsContext = context == null;
+        _context = context ?? new MpvContext();
 
+        ApplyPipelineOptions();
+
+        _pollTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(16) // ~60 FPS
+        };
+        _pollTimer.Tick += OnPollTick;
+        _pollTimer.Start();
+    }
+
+    private void ApplyPipelineOptions()
+    {
         var builtOptions = _pipelineBuilder.BuildOptions(_options);
         foreach (var (k, v) in builtOptions)
         {
@@ -95,16 +113,35 @@ public class CorePlaybackEngine : ICorePlaybackEngine
             }
             catch
             {
-                // Best effort
+                try
+                {
+                    _context.SetPropertyString(k, v);
+                }
+                catch
+                {
+                    // Best effort
+                }
             }
         }
+    }
 
-        _pollTimer = new DispatcherTimer
+    public void AttachContext(MpvContext context)
+    {
+        if (context == null || ReferenceEquals(_context, context)) return;
+
+        if (_ownsContext)
         {
-            Interval = TimeSpan.FromMilliseconds(16) // ~60 FPS
-        };
-        _pollTimer.Tick += OnPollTick;
-        _pollTimer.Start();
+            try { _context.Dispose(); } catch { }
+        }
+
+        _ownsContext = false;
+        _context = context;
+        ApplyPipelineOptions();
+
+        if (!string.IsNullOrWhiteSpace(_currentFilePath) && File.Exists(_currentFilePath))
+        {
+            Load(_currentFilePath, _position.TotalSeconds);
+        }
     }
 
     private void OnPollTick(object? sender, EventArgs e)
@@ -115,7 +152,7 @@ public class CorePlaybackEngine : ICorePlaybackEngine
         {
             var isPaused = SafeGet(() => _context.Pause.Get()) == true;
             var timePos = SafeGet(() => _context.TimePos.Get());
-            var currentlyPlaying = !isPaused && (timePos ?? 0) > 0;
+            var currentlyPlaying = !isPaused && timePos.HasValue;
             if (currentlyPlaying != _isPlaying)
             {
                 _isPlaying = currentlyPlaying;
@@ -614,7 +651,10 @@ public class CorePlaybackEngine : ICorePlaybackEngine
         try
         {
             _context.RunCommandString("stop");
-            _context.Dispose();
+            if (_ownsContext)
+            {
+                _context.Dispose();
+            }
         }
         catch
         {

@@ -59,21 +59,19 @@ public interface IPlaybackService
     string TakeSnapshot();
     string TakeSnapshot(bool includeSubtitles);
     PlaybackStatistics GetCurrentStatistics();
+    void AttachContext(MpvContext context);
 }
 
 public class MpvPlaybackService : IPlaybackService, ICorePlaybackEngine
 {
     private readonly CorePlaybackEngine _engine;
 
-    public MpvPlaybackService(EngineOptions? options = null)
+    public MpvPlaybackService(EngineOptions? options = null) : this(new CorePlaybackEngine(options))
     {
-        _engine = new CorePlaybackEngine(options);
-        _engine.PlaybackStateChanged += (s, e) => PlaybackStateChanged?.Invoke(this, e);
-        _engine.PositionChanged += (s, e) => PositionChanged?.Invoke(this, e);
-        _engine.MediaOpened += (s, e) => MediaOpened?.Invoke(this, e);
-        _engine.MediaEnded += (s, e) => MediaEnded?.Invoke(this, e);
-        _engine.TracksChanged += (s, e) => TracksChanged?.Invoke(this, e);
-        _engine.StatisticsUpdated += (s, e) => StatisticsUpdated?.Invoke(this, e);
+    }
+
+    public MpvPlaybackService(MpvContext context, EngineOptions? options = null) : this(new CorePlaybackEngine(context, options))
+    {
     }
 
     public MpvPlaybackService(CorePlaybackEngine engine)
@@ -138,6 +136,7 @@ public class MpvPlaybackService : IPlaybackService, ICorePlaybackEngine
     public string TakeSnapshot() => _engine.TakeSnapshot(true);
     public string TakeSnapshot(bool includeSubtitles = true) => _engine.TakeSnapshot(includeSubtitles);
     public PlaybackStatistics GetCurrentStatistics() => _engine.GetCurrentStatistics();
+    public void AttachContext(MpvContext context) => _engine.AttachContext(context);
 
     public void Dispose()
     {

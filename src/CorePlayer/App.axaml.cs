@@ -18,12 +18,9 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var vm = new MainViewModel();
-            var window = new MainWindow
-            {
-                DataContext = vm,
-            };
+            var window = new MainWindow();
             desktop.MainWindow = window;
+            var vm = window.DataContext as MainViewModel;
 
             if (desktop.Args != null && desktop.Args.Length > 0 && !string.IsNullOrWhiteSpace(desktop.Args[0]))
             {
@@ -33,7 +30,7 @@ public partial class App : Application
                     try
                     {
                         System.IO.File.AppendAllText("crash.log", $"[{DateTime.Now:HH:mm:ss}] Opening file from args: {targetFile}\n");
-                        vm.OpenFile(targetFile);
+                        vm?.OpenFile(targetFile);
                     }
                     catch (Exception ex)
                     {

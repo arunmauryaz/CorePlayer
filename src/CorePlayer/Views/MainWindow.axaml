@@ -21,7 +21,7 @@
         <!-- ================= LAYER 0: VIDEO SURFACE & BACKGROUND CANVAS ================= -->
         <Grid>
             <!-- MPV OpenGL Hardware Video Surface -->
-            <mpv:MpvView MpvContext="{Binding MpvContext}"
+            <mpv:MpvView x:Name="PlayerView"
                          Renderer="OpenGl"
                          HorizontalAlignment="Stretch"
                          VerticalAlignment="Stretch" />

@@ -8,7 +8,6 @@ public class HardwarePipelineBuilder
     {
         var dict = new Dictionary<string, string>
         {
-            ["vo"] = "libmpv",
             ["keep-open"] = "yes",
             ["sub-auto"] = "fuzzy",
             ["audio-pitch-correction"] = options.AudioPitchCorrection ? "yes" : "no",
