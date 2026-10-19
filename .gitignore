@@ -1,0 +1,19 @@
+## .NET / C#
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## IDE & Editors
+.vs/
+.idea/
+*.swp
+*~
+
+## App Data & Artifacts
+preview.png
+capture.ps1

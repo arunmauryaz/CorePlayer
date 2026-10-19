@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="liquidGlassBody" x1="15%" y1="10%" x2="85%" y2="90%">
+      <stop offset="0%" stop-color="#9C9CA2" />
+      <stop offset="35%" stop-color="#73737A" />
+      <stop offset="70%" stop-color="#55555C" />
+      <stop offset="100%" stop-color="#3C3C42" />
+    </linearGradient>
+
+    <linearGradient id="liquidGlassRim" x1="20%" y1="5%" x2="80%" y2="95%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+      <stop offset="30%" stop-color="#D0D0D8" stop-opacity="0.75" />
+      <stop offset="60%" stop-color="#606068" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#24242A" stop-opacity="0.9" />
+    </linearGradient>
+
+    <filter id="glassGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000000" flood-opacity="0.55" />
+    </filter>
+  </defs>
+
+  <!-- Left: Rounded Triangle -->
+  <path d="M12.5 12.8 C10.9 11.8 8.8 12.9 8.8 14.8 L8.8 33.2 C8.8 35.1 10.9 36.2 12.5 35.2 L27.2 26.0 C28.7 25.0 28.7 22.9 27.2 22.0 Z"
+        fill="url(#liquidGlassBody)"
+        stroke="url(#liquidGlassRim)"
+        stroke-width="1.6"
+        stroke-linejoin="round"
+        stroke-linecap="round"
+        filter="url(#glassGlow)" />
+
+  <!-- Right: Vertical Rounded Pill Bar (Exact match to reference) -->
+  <rect x="32" y="10.5" width="7" height="27" rx="3.5" ry="3.5"
+        fill="url(#liquidGlassBody)"
+        stroke="url(#liquidGlassRim)"
+        stroke-width="1.6"
+        filter="url(#glassGlow)" />
+</svg>

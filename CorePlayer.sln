@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{56A1926B-0115-48E9-9CD9-7A9F8E92DA0C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CorePlayer", "src\CorePlayer\CorePlayer.csproj", "{79141100-6C8A-44F6-B2B3-BD94B8EA59FB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{79141100-6C8A-44F6-B2B3-BD94B8EA59FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79141100-6C8A-44F6-B2B3-BD94B8EA59FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79141100-6C8A-44F6-B2B3-BD94B8EA59FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79141100-6C8A-44F6-B2B3-BD94B8EA59FB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{79141100-6C8A-44F6-B2B3-BD94B8EA59FB} = {56A1926B-0115-48E9-9CD9-7A9F8E92DA0C}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,606 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:CorePlayer.ViewModels"
+        xmlns:models="using:CorePlayer.Models"
+        xmlns:mpv="clr-namespace:HanumanInstitute.LibMpv.Avalonia;assembly=HanumanInstitute.LibMpv.Avalonia"
+        x:Class="CorePlayer.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="{Binding HeaderTitleText}"
+        Width="1080" Height="620"
+        MinWidth="540" MinHeight="320"
+        WindowStartupLocation="CenterScreen"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="32"
+        Background="#000000"
+        Topmost="{Binding IsAlwaysOnTop}">
+
+    <!-- Root Grid -->
+    <Grid Background="#000000">
+
+        <!-- ================= LAYER 0: VIDEO SURFACE & BACKGROUND CANVAS ================= -->
+        <Grid>
+            <!-- MPV OpenGL Hardware Video Surface -->
+            <mpv:MpvView MpvContext="{Binding MpvContext}"
+                         HorizontalAlignment="Stretch"
+                         VerticalAlignment="Stretch"
+                         IsVisible="{Binding HasMedia}" />
+
+            <!-- Pure Blank Black Canvas when no media is loaded (No center icon or text) -->
+            <Border IsVisible="{Binding !HasMedia}"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    Background="#000000" />
+
+            <!-- Active Drag-Over Highlight Border -->
+            <Border BorderBrush="{StaticResource AccentLiquidBrush}"
+                    BorderThickness="1"
+                    IsVisible="{Binding IsDraggingOver}"
+                    IsHitTestVisible="False"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch" />
+
+            <!-- Interaction Surface (Gestures, Mouse Wheel, Drag-Drop) -->
+            <Border Background="Transparent"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    PointerMoved="OnVideoAreaPointerMoved"
+                    PointerPressed="OnVideoAreaPointerPressed"
+                    PointerWheelChanged="OnVideoAreaPointerWheelChanged"
+                    DoubleTapped="OnVideoAreaDoubleTapped"
+                    DragDrop.AllowDrop="True" />
+        </Grid>
+
+        <!-- ================= LAYER 1: QUIET HUD, PROMPT & TOAST OVERLAYS ================= -->
+        <!-- Quiet Auto-Resume Prompt -->
+        <Border IsVisible="{Binding ShowResumePrompt}"
+                VerticalAlignment="Top"
+                HorizontalAlignment="Center"
+                Margin="0,44,0,0"
+                Background="#EE141416"
+                BorderBrush="#33FFFFFF"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="14,6">
+            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <TextBlock Text="{Binding ResumeTimeText, StringFormat='Resume from {0}?'}"
+                           FontSize="12"
+                           Foreground="#EEEEEE"
+                           VerticalAlignment="Center"
+                           FontFamily="{StaticResource MonospaceFont}" />
+
+                <Button Classes="iris-btn"
+                        Command="{Binding ResumeFromPromptCommand}"
+                        Padding="8,2"
+                        Height="24"
+                        Width="NaN">
+                    <TextBlock Text="Resume" FontWeight="SemiBold" Foreground="{StaticResource AccentLiquidBrush}" FontSize="12" />
+                </Button>
+
+                <Button Classes="iris-btn"
+                        Command="{Binding DismissResumePromptCommand}"
+                        Padding="8,2"
+                        Height="24"
+                        Width="NaN">
+                    <TextBlock Text="Start Over" Foreground="#888888" FontSize="11" />
+                </Button>
+            </StackPanel>
+        </Border>
+
+        <!-- Quiet Gesture HUD (Center) -->
+        <Border IsVisible="{Binding IsGestureHudVisible}"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="#B3000000"
+                CornerRadius="6"
+                Padding="16,8">
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <TextBlock Text="{Binding GestureHudTitle}"
+                           FontSize="13"
+                           Foreground="#AAAAAA"
+                           VerticalAlignment="Center" />
+                <TextBlock Text="{Binding GestureHudValue}"
+                           FontSize="15"
+                           FontWeight="Bold"
+                           Foreground="#FFFFFF"
+                           FontFamily="{StaticResource MonospaceFont}"
+                           VerticalAlignment="Center" />
+            </StackPanel>
+        </Border>
+
+        <!-- Toast Notification -->
+        <Border IsVisible="{Binding IsToastVisible}"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                Margin="0,0,0,50"
+                Background="#E6161618"
+                BorderBrush="#282828"
+                BorderThickness="1"
+                CornerRadius="4"
+                Padding="12,5">
+            <TextBlock Text="{Binding ToastMessage}"
+                       FontSize="11"
+                       Foreground="#EEEEEE" />
+        </Border>
+
+        <!-- ================= LAYER 2: SLIM TOP BAR WITH VLC-STYLE GLASS MENUS & PIN ================= -->
+        <!-- Native Windows caption buttons render in top right in windowed mode; in fullscreen, margin adapts so top-right controls are accessible -->
+        <Border x:Name="TopBarBorder"
+                VerticalAlignment="Top"
+                Height="36"
+                Background="#40000000"
+                Padding="12,0,0,0"
+                PointerPressed="OnTopBarPointerPressed"
+                IsVisible="{Binding IsControlsVisible}"
+                Classes.fullscreen="{Binding IsFullscreen}">
+            <Border.Styles>
+                <Style Selector="Border#TopBarBorder">
+                    <Setter Property="Margin" Value="0,0,140,0" />
+                </Style>
+                <Style Selector="Border#TopBarBorder.fullscreen">
+                    <Setter Property="Margin" Value="0,0,8,0" />
+                </Style>
+            </Border.Styles>
+            <Grid ColumnDefinitions="Auto, *, Auto" VerticalAlignment="Center">
+                <!-- 1. Glassmorphic VLC-style Top Menu (No Logo or Brand Name) -->
+                <Menu Grid.Column="0" Classes="iris-top-menu" VerticalAlignment="Center">
+                    <!-- File -->
+                    <MenuItem Header="_File">
+                        <MenuItem Header="Open File..." Click="OnOpenFileClick" InputGesture="Ctrl+O" />
+                        <MenuItem Header="Open Folder..." Click="OnOpenFolderClick" InputGesture="Ctrl+F" />
+                        <MenuItem Header="Open URL / Stream..." Click="OnOpenUrlClick" InputGesture="Ctrl+U" />
+                        <Separator />
+                        <MenuItem Header="Exit" Click="OnCloseClick" InputGesture="Alt+F4" />
+                    </MenuItem>
+
+                    <!-- Playback -->
+                    <MenuItem Header="_Playback">
+                        <MenuItem Header="Play / Pause" Command="{Binding TogglePlayPauseCommand}" InputGesture="Space" />
+                        <MenuItem Header="Stop" Command="{Binding StopCommand}" />
+                        <Separator />
+                        <MenuItem Header="Next File" Command="{Binding PlayNextTrackCommand}" InputGesture="Shift+N" />
+                        <MenuItem Header="Previous File" Command="{Binding PlayPreviousTrackCommand}" InputGesture="Shift+P" />
+                        <MenuItem Header="Forward 10s" Command="{Binding SeekForward10Command}" />
+                        <MenuItem Header="Rewind 10s" Command="{Binding SeekBackward10Command}" />
+                        <Separator />
+                        <MenuItem Header="Speed">
+                            <MenuItem Header="0.5x" Command="{Binding SetSpeedCommand}" CommandParameter="0.5" />
+                            <MenuItem Header="0.75x" Command="{Binding SetSpeedCommand}" CommandParameter="0.75" />
+                            <MenuItem Header="1.0x (Normal)" Command="{Binding SetSpeedCommand}" CommandParameter="1.0" />
+                            <MenuItem Header="1.25x" Command="{Binding SetSpeedCommand}" CommandParameter="1.25" />
+                            <MenuItem Header="1.5x" Command="{Binding SetSpeedCommand}" CommandParameter="1.5" />
+                            <MenuItem Header="2.0x" Command="{Binding SetSpeedCommand}" CommandParameter="2.0" />
+                        </MenuItem>
+                        <MenuItem Header="Repeat Mode" Command="{Binding ToggleRepeatCommand}" />
+                        <MenuItem Header="Shuffle" Command="{Binding ToggleShuffleCommand}" />
+                    </MenuItem>
+
+                    <!-- Audio -->
+                    <MenuItem Header="_Audio">
+                        <MenuItem Header="Audio Tracks" Command="{Binding ToggleTracksMenuCommand}" />
+                        <Separator />
+                        <MenuItem Header="Mute / Unmute" Command="{Binding ToggleMuteCommand}" InputGesture="M" />
+                        <MenuItem Header="Volume Up" Command="{Binding VolumeUpCommand}" />
+                        <MenuItem Header="Volume Down" Command="{Binding VolumeDownCommand}" />
+                    </MenuItem>
+
+                    <!-- Subtitle -->
+                    <MenuItem Header="_Subtitle">
+                        <MenuItem Header="Subtitle Tracks" Command="{Binding ToggleTracksMenuCommand}" InputGesture="C" />
+                        <MenuItem Header="Add Subtitle File..." Click="OnAddExternalSubtitleClick" />
+                        <Separator />
+                        <MenuItem Header="Delay +0.1s" Command="{Binding SubtitleDelayPlusCommand}" />
+                        <MenuItem Header="Delay -0.1s" Command="{Binding SubtitleDelayMinusCommand}" />
+                    </MenuItem>
+
+                    <!-- View -->
+                    <MenuItem Header="_View">
+                        <MenuItem Header="Fullscreen" Command="{Binding ToggleFullscreenCommand}" InputGesture="F11" />
+                        <MenuItem Header="Always on Top (Pin)" Command="{Binding ToggleAlwaysOnTopCommand}" />
+                        <MenuItem Header="Playlist Queue" Command="{Binding ToggleQueueCommand}" />
+                        <Separator />
+                        <MenuItem Header="Aspect Ratio">
+                            <MenuItem Header="Fit to Window" Command="{Binding SetAspectRatioCommand}" CommandParameter="-1" />
+                            <MenuItem Header="16:9 Widescreen" Command="{Binding SetAspectRatioCommand}" CommandParameter="16:9" />
+                            <MenuItem Header="4:3 Standard" Command="{Binding SetAspectRatioCommand}" CommandParameter="4:3" />
+                            <MenuItem Header="2.35:1 Cinematic" Command="{Binding SetAspectRatioCommand}" CommandParameter="2.35:1" />
+                        </MenuItem>
+                        <MenuItem Header="Technical Info" Command="{Binding ToggleInfoModalCommand}" InputGesture="Ctrl+I" />
+                        <MenuItem Header="Take Snapshot" Command="{Binding TakeSnapshotCommand}" InputGesture="Ctrl+S" />
+                    </MenuItem>
+
+                    <!-- Settings -->
+                    <MenuItem Header="_Settings">
+                        <MenuItem Header="Preferences..." Command="{Binding OpenPreferencesCommand}" />
+                        <MenuItem Header="Advanced Settings..." Command="{Binding OpenAdvancedSettingsCommand}" />
+                        <Separator />
+                        <MenuItem Header="About Player" Click="OnAboutClick" />
+                    </MenuItem>
+                </Menu>
+
+                <!-- 2. Currently playing file indicator (if media loaded) -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="14,0,0,0" IsVisible="{Binding HasMedia}">
+                    <Border Width="1" Height="14" Background="#33FFFFFF" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding HeaderTitleText}"
+                               FontSize="11"
+                               Foreground="#AAAAAA"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               MaxWidth="450" />
+                </StackPanel>
+
+                <!-- 3. Top-Right Controls (Pin + Dedicated Fullscreen Window Controls) -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <!-- Pin (Always On Top) Icon Button with Tilt / Straight state -->
+                    <Button Classes="iris-pin-btn"
+                            Classes.pinned="{Binding IsAlwaysOnTop}"
+                            Command="{Binding ToggleAlwaysOnTopCommand}"
+                            ToolTip.Tip="Always on Top (Pin)"
+                            VerticalAlignment="Center"
+                            Margin="0,0,4,0">
+                        <PathIcon Data="{StaticResource PinIcon}"
+                                  Width="15" Height="15"
+                                  Classes="liquid-icon" />
+                    </Button>
+
+                    <!-- Dedicated Fullscreen Window Controls (Shown only in fullscreen so controls don't disappear) -->
+                    <StackPanel Orientation="Horizontal" Spacing="2" IsVisible="{Binding IsFullscreen}" VerticalAlignment="Center" Margin="6,0,8,0">
+                        <!-- Minimize -->
+                        <Button Classes="iris-btn" Click="OnMinimizeClick" ToolTip.Tip="Minimize" Width="28" Height="28">
+                            <PathIcon Data="{StaticResource MinimizeIcon}" Width="12" Height="12" Classes="liquid-icon" />
+                        </Button>
+                        <!-- Restore / Exit Fullscreen -->
+                        <Button Classes="iris-btn" Command="{Binding ToggleFullscreenCommand}" ToolTip.Tip="Exit Fullscreen (F11 / Esc)" Width="28" Height="28">
+                            <PathIcon Data="{StaticResource RestoreIcon}" Width="12" Height="12" Classes="liquid-icon" />
+                        </Button>
+                        <!-- Close -->
+                        <Button Classes="iris-btn iris-close-btn" Click="OnCloseClick" ToolTip.Tip="Close" Width="28" Height="28">
+                            <PathIcon Data="{StaticResource CloseIcon}" Width="10" Height="10" Classes="liquid-icon" />
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ================= LAYER 3: LIQUID GLASS DOCKED BOTTOM CONTROL STRIP ================= -->
+        <!-- Single horizontal row docked flush to the bottom; 46px height with prominent liquid glass controls -->
+        <Border VerticalAlignment="Bottom"
+                Height="46"
+                IsVisible="{Binding IsControlsVisible}">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                    <GradientStop Color="#00000000" Offset="0" />
+                    <GradientStop Color="#80000000" Offset="0.3" />
+                    <GradientStop Color="#E6000000" Offset="1" />
+                </LinearGradientBrush>
+            </Border.Background>
+
+            <!-- Single continuous horizontal line -->
+            <Grid ColumnDefinitions="Auto, *, Auto" Margin="12,0,12,0" VerticalAlignment="Center">
+
+                <!-- ===== LEFT GROUP: PLAYBACK & SOUND CONTROLS ===== -->
+                <!-- [Play] [Prev] [Next] [Shuffle] [Repeat] [1.0X] [VolIcon] [VolSlider] -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <!-- Play / Pause Featured Liquid Capsule -->
+                    <Button Classes="iris-play-btn" Command="{Binding TogglePlayPauseCommand}" ToolTip.Tip="Play / Pause (Space)">
+                        <Panel>
+                            <PathIcon Data="{StaticResource PlayIcon}" Width="18" Height="18" Classes="liquid-icon" IsVisible="{Binding !IsPlaying}" Margin="2,0,0,0" />
+                            <PathIcon Data="{StaticResource PauseIcon}" Width="18" Height="18" Classes="liquid-icon" IsVisible="{Binding IsPlaying}" />
+                        </Panel>
+                    </Button>
+
+                    <!-- Previous Track -->
+                    <Button Classes="iris-btn" Command="{Binding PlayPreviousTrackCommand}" ToolTip.Tip="Previous File (Shift+P)">
+                        <PathIcon Data="{StaticResource PrevIcon}" Width="18" Height="18" Classes="liquid-icon" />
+                    </Button>
+
+                    <!-- Next Track -->
+                    <Button Classes="iris-btn" Command="{Binding PlayNextTrackCommand}" ToolTip.Tip="Next File (Shift+N)">
+                        <PathIcon Data="{StaticResource NextIcon}" Width="18" Height="18" Classes="liquid-icon" />
+                    </Button>
+
+                    <!-- Shuffle -->
+                    <Button Classes="iris-btn" Command="{Binding ToggleShuffleCommand}" ToolTip.Tip="Shuffle">
+                        <PathIcon Data="{StaticResource ShuffleIcon}" Width="18" Height="18" Classes="liquid-icon" Opacity="{Binding ShuffleOpacity}" />
+                    </Button>
+
+                    <!-- Repeat -->
+                    <Button Classes="iris-btn" Command="{Binding ToggleRepeatCommand}" ToolTip.Tip="Repeat (Off / All / One)">
+                        <PathIcon Data="{StaticResource RepeatIcon}" Width="18" Height="18" Classes="liquid-icon" Opacity="{Binding RepeatOpacity}" />
+                    </Button>
+
+                    <!-- Speed Indicator (1.0X) -->
+                    <Button Classes="iris-text-btn" Command="{Binding CycleSpeedCommand}" ToolTip.Tip="Playback Speed">
+                        <TextBlock Text="{Binding SpeedDisplayUpper}"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource LiquidGlassBrush}"
+                                   VerticalAlignment="Center" />
+                    </Button>
+
+                    <!-- Volume Group (Generous hit-test container for smooth slider interaction) -->
+                    <Border Classes="volume-box" Background="Transparent" VerticalAlignment="Stretch">
+                        <StackPanel Classes="volume-container" Orientation="Horizontal" VerticalAlignment="Center" Background="Transparent">
+                            <!-- Volume / Mute Button -->
+                            <Button Classes="iris-btn" Command="{Binding ToggleMuteCommand}" ToolTip.Tip="Mute (M)">
+                                <Panel>
+                                    <PathIcon Data="{StaticResource VolumeHighIcon}" Width="19" Height="19" Classes="liquid-icon" IsVisible="{Binding !IsMuted}" />
+                                    <PathIcon Data="{StaticResource VolumeMuteIcon}" Width="19" Height="19" Classes="liquid-icon" IsVisible="{Binding IsMuted}" Foreground="#FF5555" />
+                                </Panel>
+                            </Button>
+
+                            <!-- Liquid Glass Fat 10px Volume Slider (Expands smoothly on hover and stays open while tweaking) -->
+                            <Slider Classes="iris-vol"
+                                    Minimum="0" Maximum="150"
+                                    Value="{Binding Volume, Mode=TwoWay}"
+                                    VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ===== CENTER GROUP: INLINE LIQUID GLASS TIMELINE ===== -->
+                <!-- [00:00] [===================o===================] [00:00] -->
+                <Grid Grid.Column="1" ColumnDefinitions="Auto, *, Auto" VerticalAlignment="Center" Margin="8,0,8,0">
+                    <!-- Current Position -->
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding PositionFormatted}"
+                               FontSize="12"
+                               FontWeight="Medium"
+                               Foreground="#EEEEEE"
+                               FontFamily="{StaticResource MonospaceFont}"
+                               VerticalAlignment="Center"
+                               Margin="0,0,10,0" />
+
+                    <!-- Liquid Glass Broad 12px Seekbar with Small Ball Thumb (Perfect True Center) -->
+                    <Slider Grid.Column="1"
+                            Classes="iris-slider"
+                            Minimum="0"
+                            Maximum="{Binding DurationSeconds}"
+                            Value="{Binding PositionSeconds, Mode=TwoWay}"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Stretch"
+                            Margin="0" />
+
+                    <!-- Total Duration -->
+                    <TextBlock Grid.Column="2"
+                               Text="{Binding DurationFormatted}"
+                               FontSize="12"
+                               FontWeight="Medium"
+                               Foreground="#EEEEEE"
+                               FontFamily="{StaticResource MonospaceFont}"
+                               VerticalAlignment="Center"
+                               Margin="10,0,0,0" />
+                </Grid>
+
+                <!-- ===== RIGHT GROUP: TOOLS & OPTIONS ===== -->
+                <!-- [Subtitles] [Menu (3 Lines)] [Fullscreen] -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <!-- Subtitles / CC -->
+                    <Button Classes="iris-btn" Command="{Binding ToggleTracksMenuCommand}" ToolTip.Tip="Subtitles &amp; Audio (C)">
+                        <PathIcon Data="{StaticResource CcIcon}" Width="19" Height="19" Classes="liquid-icon" />
+                    </Button>
+
+                    <!-- Options Menu (Three Lines / Hamburger) -->
+                    <Button Classes="iris-btn" Command="{Binding ToggleMoreMenuCommand}" ToolTip.Tip="Options (Three Lines)">
+                        <PathIcon Data="{StaticResource MenuLinesIcon}" Width="18" Height="18" Classes="liquid-icon" />
+                    </Button>
+
+                    <!-- Fullscreen Toggle -->
+                    <Button Classes="iris-btn" Command="{Binding ToggleFullscreenCommand}" ToolTip.Tip="Fullscreen (F)">
+                        <Panel>
+                            <PathIcon Data="{StaticResource FullscreenIcon}" Width="18" Height="18" Classes="liquid-icon" IsVisible="{Binding !IsFullscreen}" />
+                            <PathIcon Data="{StaticResource ExitFullscreenIcon}" Width="18" Height="18" Classes="liquid-icon" IsVisible="{Binding IsFullscreen}" />
+                        </Panel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ================= LAYER 4: MORE OPTIONS POPOVER (⋮) ================= -->
+        <Border IsVisible="{Binding IsMoreMenuOpen}"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Margin="0,0,10,44"
+                Width="220"
+                Background="#F0141416"
+                BorderBrush="#2A2A2E"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="6"
+                BoxShadow="0 8 24 #80000000">
+            <StackPanel Spacing="3">
+                <Grid ColumnDefinitions="*, Auto" Margin="6,2,6,4">
+                    <TextBlock Grid.Column="0" Text="Options" FontSize="11" FontWeight="SemiBold" Foreground="#888890" />
+                    <Button Grid.Column="1" Classes="iris-btn" Command="{Binding ToggleMoreMenuCommand}" Padding="2" Height="18" Width="18">
+                        <PathIcon Data="{StaticResource CloseIcon}" Width="8" Height="8" Foreground="#888888" />
+                    </Button>
+                </Grid>
+
+                <!-- Take Snapshot -->
+                <Button Classes="iris-menu-item" Command="{Binding TakeSnapshotCommand}">
+                    <Grid ColumnDefinitions="Auto, *, Auto">
+                        <PathIcon Grid.Column="0" Data="{StaticResource CameraIcon}" Width="13" Height="13" Classes="liquid-icon" Margin="0,0,8,0" />
+                        <TextBlock Grid.Column="1" Text="Take Snapshot" FontSize="11" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" Text="Ctrl+S" FontSize="10" Foreground="#666666" VerticalAlignment="Center" />
+                    </Grid>
+                </Button>
+
+                <!-- Aspect Ratio -->
+                <Button Classes="iris-menu-item" Command="{Binding CycleAspectRatioCommand}">
+                    <Grid ColumnDefinitions="Auto, *, Auto">
+                        <PathIcon Grid.Column="0" Data="{StaticResource AspectRatioIcon}" Width="13" Height="13" Classes="liquid-icon" Margin="0,0,8,0" />
+                        <TextBlock Grid.Column="1" Text="Aspect Ratio" FontSize="11" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" Text="{Binding AspectRatioName}" FontSize="11" Foreground="{StaticResource AccentLiquidBrush}" VerticalAlignment="Center" />
+                    </Grid>
+                </Button>
+
+                <!-- Playback Speed -->
+                <Button Classes="iris-menu-item" Command="{Binding CycleSpeedCommand}">
+                    <Grid ColumnDefinitions="Auto, *, Auto">
+                        <PathIcon Grid.Column="0" Data="{StaticResource StepForwardIcon}" Width="13" Height="13" Classes="liquid-icon" Margin="0,0,8,0" />
+                        <TextBlock Grid.Column="1" Text="Speed" FontSize="11" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" Text="{Binding SpeedDisplayUpper}" FontSize="11" Foreground="{StaticResource AccentLiquidBrush}" VerticalAlignment="Center" />
+                    </Grid>
+                </Button>
+
+                <!-- Subtitles & Audio Tracks -->
+                <Button Classes="iris-menu-item" Command="{Binding ToggleTracksMenuCommand}">
+                    <Grid ColumnDefinitions="Auto, *, Auto">
+                        <PathIcon Grid.Column="0" Data="{StaticResource CcIcon}" Width="13" Height="13" Classes="liquid-icon" Margin="0,0,8,0" />
+                        <TextBlock Grid.Column="1" Text="Tracks &amp; Delay" FontSize="11" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="2" Text="C" FontSize="10" Foreground="#666666" VerticalAlignment="Center" />
+                    </Grid>
+                </Button>
+
+                <!-- Open Media File -->
+                <Button Classes="iris-menu-item" Click="OnOpenFileClick">
+                    <Grid ColumnDefinitions="Auto, *">
+                        <PathIcon Grid.Column="0" Data="{StaticResource FolderIcon}" Width="13" Height="13" Classes="liquid-icon" Margin="0,0,8,0" />
+                        <TextBlock Grid.Column="1" Text="Open File..." FontSize="11" VerticalAlignment="Center" />
+                    </Grid>
+                </Button>
+
+                <!-- Divider & Technical Specs -->
+                <Border BorderBrush="#1AFFFFFF" BorderThickness="0,1,0,0" Margin="4,4,4,2" />
+                <StackPanel Spacing="2" Margin="6,2">
+                    <TextBlock Text="{Binding Resolution, StringFormat='Resolution: {0}'}" FontSize="10" Foreground="#666666" />
+                    <TextBlock Text="{Binding VideoCodec, StringFormat='Codec: {0}'}" FontSize="10" Foreground="#666666" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- ================= LAYER 5: PLAYLIST QUEUE DRAWER ================= -->
+        <Border IsVisible="{Binding IsQueueOpen}"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Stretch"
+                Width="280"
+                Background="#F0111114"
+                BorderBrush="#222226"
+                BorderThickness="1,0,0,0">
+            <Grid RowDefinitions="Auto, *, Auto" Margin="12,36,12,12">
+                <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,8">
+                    <TextBlock Grid.Column="0" Text="Playlist Queue" FontSize="12" FontWeight="SemiBold" Foreground="#FFFFFF" />
+                    <Button Grid.Column="1" Classes="iris-btn" Command="{Binding ToggleQueueCommand}" Padding="2" Height="20" Width="20">
+                        <PathIcon Data="{StaticResource CloseIcon}" Width="10" Height="10" Foreground="#AAAAAA" />
+                    </Button>
+                </Grid>
+
+                <ScrollViewer Grid.Row="1">
+                    <ItemsControl ItemsSource="{Binding Playlist}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="models:MediaItem">
+                                <Border CornerRadius="4"
+                                        Background="#0CFFFFFF"
+                                        Margin="0,0,0,4"
+                                        Padding="8,6">
+                                    <Grid ColumnDefinitions="Auto, *, Auto">
+                                        <Button Grid.Column="0" Classes="iris-btn"
+                                                Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).PlayMediaItemCommand}"
+                                                CommandParameter="{Binding}"
+                                                Padding="0" Height="16" Width="16" Margin="0,0,6,0">
+                                            <PathIcon Data="{StaticResource PlayIcon}" Width="9" Height="9" Foreground="{StaticResource AccentLiquidBrush}" />
+                                        </Button>
+                                        <TextBlock Grid.Column="1" Text="{Binding FileName}" FontSize="11" Foreground="#EEEEEE" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                        <Button Grid.Column="2" Classes="iris-btn"
+                                                Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).RemoveQueueItemCommand}"
+                                                CommandParameter="{Binding}"
+                                                Padding="2" Height="18" Width="18">
+                                            <PathIcon Data="{StaticResource CloseIcon}" Width="8" Height="8" Foreground="#888888" />
+                                        </Button>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <StackPanel Grid.Row="2" Spacing="4" Margin="0,8,0,0">
+                    <Button Classes="iris-menu-item" Click="OnOpenFileClick" Background="#14FFFFFF">
+                        <TextBlock Text="+ Add Media File" FontSize="11" HorizontalAlignment="Center" />
+                    </Button>
+                    <Button Classes="iris-menu-item" Command="{Binding ClearQueueCommand}">
+                        <TextBlock Text="Clear Queue" FontSize="11" Foreground="#888888" HorizontalAlignment="Center" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ================= LAYER 6: SUBTITLES & AUDIO TRACKS CORNER POPOVER ================= -->
+        <!-- Arises directly above the CC button in the bottom-right corner -->
+        <Border IsVisible="{Binding IsTracksMenuOpen}"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Margin="0,0,12,52"
+                Width="260"
+                Background="#F0141416"
+                BorderBrush="#28282E"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="10"
+                BoxShadow="0 8 32 #80000000">
+            <StackPanel Spacing="8">
+                <!-- Segmented Tabs Header: [ Audio ] [ Subtitles ] and [X] -->
+                <Grid ColumnDefinitions="*, Auto">
+                    <Border Grid.Column="0" Background="#18FFFFFF" CornerRadius="6" Padding="2" HorizontalAlignment="Left">
+                        <StackPanel Orientation="Horizontal" Spacing="2">
+                            <Button Classes="iris-tab-btn"
+                                    Classes.active="{Binding IsAudioTabSelected}"
+                                    Command="{Binding SelectAudioTabCommand}"
+                                    Content="Audio" />
+                            <Button Classes="iris-tab-btn"
+                                    Classes.active="{Binding IsSubtitlesTabSelected}"
+                                    Command="{Binding SelectSubtitlesTabCommand}"
+                                    Content="Subtitles" />
+                        </StackPanel>
+                    </Border>
+
+                    <Button Grid.Column="1" Classes="iris-btn" Command="{Binding ToggleTracksMenuCommand}" Padding="2" Height="22" Width="22">
+                        <PathIcon Data="{StaticResource CloseIcon}" Width="9" Height="9" Foreground="#AAAAAA" />
+                    </Button>
+                </Grid>
+
+                <!-- 1. AUDIO TAB VIEW -->
+                <StackPanel IsVisible="{Binding IsAudioTabSelected}" Spacing="4">
+                    <TextBlock Text="Audio Streams" FontSize="10" FontWeight="SemiBold" Foreground="#888890" Margin="4,2,0,2" />
+                    <ScrollViewer MaxHeight="170">
+                        <ItemsControl ItemsSource="{Binding AudioTracks}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="models:TrackInfo">
+                                    <Button Classes="iris-menu-item"
+                                            Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).SelectTrackCommand}"
+                                            CommandParameter="{Binding}">
+                                        <TextBlock Text="{Binding DisplayText}" FontSize="11" TextTrimming="CharacterEllipsis" />
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </StackPanel>
+
+                <!-- 2. SUBTITLES TAB VIEW -->
+                <StackPanel IsVisible="{Binding IsSubtitlesTabSelected}" Spacing="6">
+                    <TextBlock Text="Subtitle Streams" FontSize="10" FontWeight="SemiBold" Foreground="#888890" Margin="4,2,0,2" />
+                    <ScrollViewer MaxHeight="140">
+                        <ItemsControl ItemsSource="{Binding SubtitleTracks}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="models:TrackInfo">
+                                    <Button Classes="iris-menu-item"
+                                            Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).SelectTrackCommand}"
+                                            CommandParameter="{Binding}">
+                                        <TextBlock Text="{Binding DisplayText}" FontSize="11" TextTrimming="CharacterEllipsis" />
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <!-- Load External Subtitle File Button -->
+                    <Button Classes="iris-menu-item" Click="OnAddExternalSubtitleClick" Background="#18FFFFFF">
+                        <TextBlock Text="+ Load Subtitle File..." FontSize="11" HorizontalAlignment="Center" Foreground="{StaticResource AccentLiquidBrush}" FontWeight="SemiBold" />
+                    </Button>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+    </Grid>
+</Window>

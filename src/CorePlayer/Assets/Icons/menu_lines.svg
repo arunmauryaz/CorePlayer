@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="lineGlassBody" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="30%" stop-color="#E2E4EC" />
+      <stop offset="70%" stop-color="#A5ACB8" />
+      <stop offset="100%" stop-color="#6B7280" />
+    </linearGradient>
+    <linearGradient id="lineGlassRim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
+      <stop offset="50%" stop-color="#CBD5E1" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#374151" stop-opacity="0.8" />
+    </linearGradient>
+    <filter id="glassDrop" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#000000" flood-opacity="0.5" />
+    </filter>
+  </defs>
+
+  <!-- Top Rounded Horizontal Pill Capsule -->
+  <rect x="8" y="10" width="32" height="5" rx="2.5" ry="2.5"
+        fill="url(#lineGlassBody)"
+        stroke="url(#lineGlassRim)"
+        stroke-width="1.2"
+        filter="url(#glassDrop)" />
+
+  <!-- Middle Rounded Horizontal Pill Capsule -->
+  <rect x="8" y="21.5" width="32" height="5" rx="2.5" ry="2.5"
+        fill="url(#lineGlassBody)"
+        stroke="url(#lineGlassRim)"
+        stroke-width="1.2"
+        filter="url(#glassDrop)" />
+
+  <!-- Bottom Rounded Horizontal Pill Capsule -->
+  <rect x="8" y="33" width="32" height="5" rx="2.5" ry="2.5"
+        fill="url(#lineGlassBody)"
+        stroke="url(#lineGlassRim)"
+        stroke-width="1.2"
+        filter="url(#glassDrop)" />
+</svg>

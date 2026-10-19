@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.2.3" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.2.3" />
+    <PackageReference Include="Avalonia.Svg.Skia" Version="11.2.0.2" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.3" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.3" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="HanumanInstitute.LibMpv.Avalonia" Version="0.9.1" />
+    <PackageReference Include="Nickvision.MPVSharp.Bundled" Version="2023.9.0" />
+  </ItemGroup>
+
+  <Target Name="CopyNativeMpv" AfterTargets="Build">
+    <Copy SourceFiles="$(OutputPath)runtimes\win-x64\native\libmpv-2.dll" DestinationFiles="$(OutputPath)libmpv-2.dll" Condition="Exists('$(OutputPath)runtimes\win-x64\native\libmpv-2.dll') And !Exists('$(OutputPath)libmpv-2.dll')" />
+    <Copy SourceFiles="$(OutputPath)runtimes\win-x64\native\libmpv-2.dll" DestinationFiles="$(OutputPath)mpv-2.dll" Condition="Exists('$(OutputPath)runtimes\win-x64\native\libmpv-2.dll') And !Exists('$(OutputPath)mpv-2.dll')" />
+  </Target>
+</Project>
