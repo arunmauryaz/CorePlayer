@@ -20,8 +20,11 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     private readonly DispatcherTimer _controlsTimer;
     private readonly DispatcherTimer _gestureTimer;
     private readonly DispatcherTimer _toastTimer;
+    private readonly DispatcherTimer _skipHudTimer;
     private readonly Random _random = new();
 
+    private double _accumulatedForwardSeconds;
+    private double _accumulatedBackwardSeconds;
     private double _pendingResumePosition;
     private bool _isDisposed;
     private int _unmutedVolume = 100;
@@ -142,7 +145,20 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private string _resumeTimeText = "00:00";
 
-    // Gesture HUD
+    // YouTube-Style Skip HUD (Left/Right pill overlays)
+    [ObservableProperty]
+    private bool _isSkipForwardHudVisible;
+
+    [ObservableProperty]
+    private bool _isSkipBackwardHudVisible;
+
+    [ObservableProperty]
+    private string _skipForwardText = "+5 seconds";
+
+    [ObservableProperty]
+    private string _skipBackwardText = "-5 seconds";
+
+    // Legacy Gesture HUD (kept for backward compatibility, center rectangle removed)
     [ObservableProperty]
     private bool _isGestureHudVisible;
 
@@ -241,6 +257,16 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         {
             IsToastVisible = false;
             _toastTimer.Stop();
+        };
+
+        _skipHudTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(800) };
+        _skipHudTimer.Tick += (_, _) =>
+        {
+            IsSkipForwardHudVisible = false;
+            IsSkipBackwardHudVisible = false;
+            _accumulatedForwardSeconds = 0;
+            _accumulatedBackwardSeconds = 0;
+            _skipHudTimer.Stop();
         };
     }
 
@@ -522,21 +548,63 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         ShowControls();
     }
 
-    [RelayCommand]
-    public void SeekRelative(double offsetSeconds)
+    public void SeekRelativeWithHud(double offsetSeconds)
     {
         _playback.SeekRelative(offsetSeconds);
         ShowControls();
 
-        var sign = offsetSeconds > 0 ? "+" : "";
-        TriggerGestureHud("Seek", $"{sign}{offsetSeconds:0}s ({PositionFormatted})", DurationSeconds > 0 ? PositionSeconds / DurationSeconds : 0);
+        if (offsetSeconds > 0)
+        {
+            if (IsSkipForwardHudVisible)
+            {
+                _accumulatedForwardSeconds += offsetSeconds;
+            }
+            else
+            {
+                _accumulatedForwardSeconds = offsetSeconds;
+            }
+
+            SkipForwardText = $"+{_accumulatedForwardSeconds:0} seconds";
+            IsSkipBackwardHudVisible = false;
+            _accumulatedBackwardSeconds = 0;
+            IsSkipForwardHudVisible = true;
+        }
+        else if (offsetSeconds < 0)
+        {
+            var abs = Math.Abs(offsetSeconds);
+            if (IsSkipBackwardHudVisible)
+            {
+                _accumulatedBackwardSeconds += abs;
+            }
+            else
+            {
+                _accumulatedBackwardSeconds = abs;
+            }
+
+            SkipBackwardText = $"-{_accumulatedBackwardSeconds:0} seconds";
+            IsSkipForwardHudVisible = false;
+            _accumulatedForwardSeconds = 0;
+            IsSkipBackwardHudVisible = true;
+        }
+
+        _skipHudTimer.Stop();
+        _skipHudTimer.Start();
     }
 
     [RelayCommand]
-    public void SeekForward10() => SeekRelative(10);
+    public void SeekRelative(double offsetSeconds) => SeekRelativeWithHud(offsetSeconds);
 
     [RelayCommand]
-    public void SeekBackward10() => SeekRelative(-10);
+    public void SeekForward5() => SeekRelativeWithHud(5);
+
+    [RelayCommand]
+    public void SeekBackward5() => SeekRelativeWithHud(-5);
+
+    [RelayCommand]
+    public void SeekForward10() => SeekRelativeWithHud(10);
+
+    [RelayCommand]
+    public void SeekBackward10() => SeekRelativeWithHud(-10);
 
     partial void OnVolumeChanged(int value)
     {
@@ -560,7 +628,6 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     {
         var target = IsMuted ? delta : Volume + delta;
         Volume = Math.Clamp(target, 0, 150);
-        TriggerGestureHud("Volume", $"{Volume}%", Volume / 150.0);
     }
 
     [RelayCommand]
@@ -577,13 +644,11 @@ public partial class MainViewModel : ViewModelBase, IDisposable
             _unmutedVolume = Volume > 0 ? Volume : 100;
             IsMuted = true;
             Volume = 0;
-            TriggerGestureHud("Audio", "Muted", 0);
         }
         else
         {
             IsMuted = false;
             Volume = _unmutedVolume > 0 ? _unmutedVolume : 100;
-            TriggerGestureHud("Audio", $"{Volume}%", Volume / 150.0);
         }
     }
 
@@ -593,9 +658,6 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         var newBright = Math.Clamp(Brightness + delta, -100, 100);
         Brightness = newBright;
         _playback.SetBrightness(Brightness);
-
-        var sign = Brightness > 0 ? "+" : "";
-        TriggerGestureHud("Brightness", $"{sign}{Brightness}%", (Brightness + 100) / 200.0);
     }
 
     [RelayCommand]
@@ -611,7 +673,6 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         _playback.SetSpeed(Speed);
 
         ShowToast($"Playback Speed: {SpeedText}");
-        TriggerGestureHud("Speed", SpeedText, Speed / 3.0);
     }
 
     [RelayCommand]
@@ -624,7 +685,6 @@ public partial class MainViewModel : ViewModelBase, IDisposable
             OnPropertyChanged(nameof(SpeedDisplayUpper));
             _playback.SetSpeed(Speed);
             ShowToast($"Speed: {SpeedText}");
-            TriggerGestureHud("Speed", SpeedText, Speed / 3.0);
         }
     }
 
@@ -834,7 +894,6 @@ public partial class MainViewModel : ViewModelBase, IDisposable
 
         _playback.SetAspectRatio(val);
         AspectRatioName = label;
-        TriggerGestureHud("Aspect", label, 0.5);
         ShowToast($"Aspect Ratio: {label}");
     }
 
@@ -843,7 +902,6 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     {
         _playback.SetAspectRatio(ratio);
         AspectRatioName = ratio == "-1" ? "Fit" : ratio;
-        TriggerGestureHud("Aspect", AspectRatioName, 0.5);
         ShowToast($"Aspect Ratio: {AspectRatioName}");
     }
 
@@ -980,6 +1038,7 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         _controlsTimer.Stop();
         _gestureTimer.Stop();
         _toastTimer.Stop();
+        _skipHudTimer.Stop();
 
         var settings = new PlayerSettings
         {

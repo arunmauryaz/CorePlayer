@@ -40,13 +40,12 @@
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch" />
 
-            <!-- Interaction Surface (Gestures, Mouse Wheel, Drag-Drop) -->
+            <!-- Interaction Surface (Gestures, Single/Double Tap, Drag-Drop) -->
             <Border Background="Transparent"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
                     PointerMoved="OnVideoAreaPointerMoved"
                     PointerPressed="OnVideoAreaPointerPressed"
-                    PointerWheelChanged="OnVideoAreaPointerWheelChanged"
                     DoubleTapped="OnVideoAreaDoubleTapped"
                     DragDrop.AllowDrop="True" />
         </Grid>
@@ -87,24 +86,55 @@
             </StackPanel>
         </Border>
 
-        <!-- Quiet Gesture HUD (Center) -->
-        <Border IsVisible="{Binding IsGestureHudVisible}"
-                HorizontalAlignment="Center"
+        <!-- YouTube-Style Left Skip HUD (Rewind) -->
+        <Border IsVisible="{Binding IsSkipBackwardHudVisible}"
+                HorizontalAlignment="Left"
                 VerticalAlignment="Center"
-                Background="#B3000000"
-                CornerRadius="6"
-                Padding="16,8">
-            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                <TextBlock Text="{Binding GestureHudTitle}"
-                           FontSize="13"
-                           Foreground="#AAAAAA"
-                           VerticalAlignment="Center" />
-                <TextBlock Text="{Binding GestureHudValue}"
-                           FontSize="15"
+                Margin="60,0,0,0"
+                Background="#B30D0D11"
+                BorderBrush="#25FFFFFF"
+                BorderThickness="1"
+                CornerRadius="24"
+                Padding="22,14"
+                BoxShadow="0 4 20 #60000000"
+                IsHitTestVisible="False">
+            <StackPanel Orientation="Vertical" Spacing="4" HorizontalAlignment="Center">
+                <PathIcon Data="{StaticResource SkipBackwardChevronIcon}"
+                          Width="26" Height="26"
+                          Foreground="#FFFFFF"
+                          HorizontalAlignment="Center" />
+                <TextBlock Text="{Binding SkipBackwardText}"
+                           FontSize="12"
                            FontWeight="Bold"
                            Foreground="#FFFFFF"
                            FontFamily="{StaticResource MonospaceFont}"
-                           VerticalAlignment="Center" />
+                           HorizontalAlignment="Center" />
+            </StackPanel>
+        </Border>
+
+        <!-- YouTube-Style Right Skip HUD (Fast-Forward) -->
+        <Border IsVisible="{Binding IsSkipForwardHudVisible}"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Margin="0,0,60,0"
+                Background="#B30D0D11"
+                BorderBrush="#25FFFFFF"
+                BorderThickness="1"
+                CornerRadius="24"
+                Padding="22,14"
+                BoxShadow="0 4 20 #60000000"
+                IsHitTestVisible="False">
+            <StackPanel Orientation="Vertical" Spacing="4" HorizontalAlignment="Center">
+                <PathIcon Data="{StaticResource SkipForwardChevronIcon}"
+                          Width="26" Height="26"
+                          Foreground="#FFFFFF"
+                          HorizontalAlignment="Center" />
+                <TextBlock Text="{Binding SkipForwardText}"
+                           FontSize="12"
+                           FontWeight="Bold"
+                           Foreground="#FFFFFF"
+                           FontFamily="{StaticResource MonospaceFont}"
+                           HorizontalAlignment="Center" />
             </StackPanel>
         </Border>
 
@@ -160,8 +190,8 @@
                         <Separator />
                         <MenuItem Header="Next File" Command="{Binding PlayNextTrackCommand}" InputGesture="Shift+N" />
                         <MenuItem Header="Previous File" Command="{Binding PlayPreviousTrackCommand}" InputGesture="Shift+P" />
-                        <MenuItem Header="Forward 10s" Command="{Binding SeekForward10Command}" />
-                        <MenuItem Header="Rewind 10s" Command="{Binding SeekBackward10Command}" />
+                        <MenuItem Header="Forward 5s" Command="{Binding SeekForward5Command}" InputGesture="Right" />
+                        <MenuItem Header="Rewind 5s" Command="{Binding SeekBackward5Command}" InputGesture="Left" />
                         <Separator />
                         <MenuItem Header="Speed">
                             <MenuItem Header="0.5x" Command="{Binding SetSpeedCommand}" CommandParameter="0.5" />
@@ -175,30 +205,9 @@
                         <MenuItem Header="Shuffle" Command="{Binding ToggleShuffleCommand}" />
                     </MenuItem>
 
-                    <!-- Audio -->
-                    <MenuItem Header="_Audio">
-                        <MenuItem Header="Audio Tracks" Command="{Binding ToggleTracksMenuCommand}" />
-                        <MenuItem Header="Cycle Audio Track" Command="{Binding CycleAudioTrackCommand}" InputGesture="B" />
-                        <MenuItem Header="Night Mode (Dialogue Boost)" Command="{Binding ToggleNightModeCommand}" />
-                        <Separator />
-                        <MenuItem Header="Mute / Unmute" Command="{Binding ToggleMuteCommand}" InputGesture="M" />
-                        <MenuItem Header="Volume Up" Command="{Binding VolumeUpCommand}" />
-                        <MenuItem Header="Volume Down" Command="{Binding VolumeDownCommand}" />
-                    </MenuItem>
-
-                    <!-- Subtitle -->
-                    <MenuItem Header="_Subtitle">
-                        <MenuItem Header="Subtitle Tracks" Command="{Binding ToggleTracksMenuCommand}" InputGesture="C" />
-                        <MenuItem Header="Cycle Subtitle Track" Command="{Binding CycleSubtitleTrackCommand}" InputGesture="V" />
-                        <MenuItem Header="Add Subtitle File..." Click="OnAddExternalSubtitleClick" />
-                        <Separator />
-                        <MenuItem Header="Delay +0.1s" Command="{Binding SubtitleDelayPlusCommand}" />
-                        <MenuItem Header="Delay -0.1s" Command="{Binding SubtitleDelayMinusCommand}" />
-                    </MenuItem>
-
                     <!-- View -->
                     <MenuItem Header="_View">
-                        <MenuItem Header="Fullscreen" Command="{Binding ToggleFullscreenCommand}" InputGesture="F11" />
+                        <MenuItem Header="Fullscreen" Command="{Binding ToggleFullscreenCommand}" InputGesture="F" />
                         <MenuItem Header="Always on Top (Pin)" Command="{Binding ToggleAlwaysOnTopCommand}" />
                         <MenuItem Header="Playlist Queue" Command="{Binding ToggleQueueCommand}" />
                         <Separator />
@@ -227,16 +236,21 @@
                     </MenuItem>
                 </Menu>
 
-                <!-- 2. Currently playing file indicator (if media loaded) -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="14,0,0,0" IsVisible="{Binding HasMedia}">
-                    <Border Width="1" Height="14" Background="#33FFFFFF" VerticalAlignment="Center" />
-                    <TextBlock Text="{Binding HeaderTitleText}"
+                <!-- 2. Responsive currently playing file indicator (character ellipsis right before pin icon) -->
+                <Grid Grid.Column="1"
+                      ColumnDefinitions="Auto, *"
+                      VerticalAlignment="Center"
+                      Margin="14,0,14,0"
+                      IsVisible="{Binding HasMedia}">
+                    <Border Grid.Column="0" Width="1" Height="14" Background="#33FFFFFF" VerticalAlignment="Center" Margin="0,0,10,0" />
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding HeaderTitleText}"
                                FontSize="11"
                                Foreground="#AAAAAA"
                                VerticalAlignment="Center"
                                TextTrimming="CharacterEllipsis"
-                               MaxWidth="450" />
-                </StackPanel>
+                               ToolTip.Tip="{Binding HeaderTitleText}" />
+                </Grid>
 
                 <!-- 3. Top-Right Controls (Pin + Dedicated Fullscreen Window Controls) -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">

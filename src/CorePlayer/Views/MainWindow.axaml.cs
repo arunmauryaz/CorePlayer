@@ -45,6 +45,18 @@ public partial class MainWindow : Window
         AddHandler(DragDrop.DragEnterEvent, OnDragEnter);
         AddHandler(DragDrop.DragLeaveEvent, OnDragLeave);
 
+        this.GetPropertyChangedObservable(WindowStateProperty).Subscribe(_ =>
+        {
+            if (ViewModel != null)
+            {
+                bool isFs = WindowState == WindowState.FullScreen;
+                if (ViewModel.IsFullscreen != isFs)
+                {
+                    ViewModel.IsFullscreen = isFs;
+                }
+            }
+        });
+
         DataContextChanged += OnDataContextChanged;
     }
 
@@ -57,6 +69,10 @@ public partial class MainWindow : Window
                 if (args.PropertyName == nameof(MainViewModel.IsFullscreen))
                 {
                     UpdateFullscreenState(ViewModel.IsFullscreen);
+                }
+                else if (args.PropertyName == nameof(MainViewModel.IsControlsVisible) || args.PropertyName == nameof(MainViewModel.IsPlaying))
+                {
+                    UpdateCursorVisibility();
                 }
                 else if (args.PropertyName == nameof(MainViewModel.IsMiniPlayer))
                 {
@@ -78,24 +94,27 @@ public partial class MainWindow : Window
             if (WindowState != WindowState.FullScreen)
             {
                 _previousWindowState = WindowState;
-            }
-            ExtendClientAreaToDecorationsHint = false;
-            SystemDecorations = SystemDecorations.None;
-            WindowState = WindowState.FullScreen;
-            if (TopBarBorder != null)
-            {
-                TopBarBorder.Margin = new Thickness(0);
+                WindowState = WindowState.FullScreen;
             }
         }
         else
         {
-            SystemDecorations = SystemDecorations.Full;
-            ExtendClientAreaToDecorationsHint = true;
-            WindowState = _previousWindowState == WindowState.FullScreen ? WindowState.Normal : _previousWindowState;
-            if (TopBarBorder != null)
+            if (WindowState == WindowState.FullScreen)
             {
-                TopBarBorder.Margin = new Thickness(0, 0, 140, 0);
+                WindowState = _previousWindowState == WindowState.FullScreen ? WindowState.Normal : _previousWindowState;
             }
+        }
+    }
+
+    private void UpdateCursorVisibility()
+    {
+        if (ViewModel != null && !ViewModel.IsControlsVisible && ViewModel.IsPlaying)
+        {
+            Cursor = new Cursor(StandardCursorType.None);
+        }
+        else
+        {
+            Cursor = Cursor.Default;
         }
     }
 
@@ -185,6 +204,10 @@ public partial class MainWindow : Window
 
     private void OnVideoAreaPointerMoved(object? sender, PointerEventArgs e)
     {
+        if (Cursor != Cursor.Default)
+        {
+            Cursor = Cursor.Default;
+        }
         ViewModel?.ShowControls();
     }
 
@@ -223,24 +246,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnVideoAreaPointerWheelChanged(object? sender, PointerWheelEventArgs e)
-    {
-        if (ViewModel == null) return;
-
-        var pos = e.GetPosition(this);
-        var delta = e.Delta.Y > 0 ? 5 : -5;
-
-        // Right 50% = Volume, Left 50% = Brightness
-        if (pos.X > Bounds.Width * 0.5)
-        {
-            ViewModel.AdjustVolume(delta);
-        }
-        else
-        {
-            ViewModel.AdjustBrightness(delta);
-        }
-    }
-
     private void OnVideoAreaDoubleTapped(object? sender, TappedEventArgs e)
     {
         _canvasClickTimer?.Stop();
@@ -257,6 +262,7 @@ public partial class MainWindow : Window
         switch (e.Key)
         {
             case Key.Space:
+            case Key.K:
                 ViewModel.TogglePlayPause();
                 e.Handled = true;
                 break;
@@ -265,7 +271,7 @@ public partial class MainWindow : Window
                 if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
                     ViewModel.PlayPreviousTrack();
                 else
-                    ViewModel.SeekBackward10();
+                    ViewModel.SeekBackward5();
                 e.Handled = true;
                 break;
 
@@ -273,7 +279,17 @@ public partial class MainWindow : Window
                 if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
                     ViewModel.PlayNextTrack();
                 else
-                    ViewModel.SeekForward10();
+                    ViewModel.SeekForward5();
+                e.Handled = true;
+                break;
+
+            case Key.J:
+                ViewModel.SeekBackward10();
+                e.Handled = true;
+                break;
+
+            case Key.L:
+                ViewModel.SeekForward10();
                 e.Handled = true;
                 break;
 

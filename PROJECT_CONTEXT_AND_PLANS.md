@@ -96,6 +96,11 @@ During engine development and testing, several subtle root-cause bugs were inves
 | **Missing Native Desktop WGL Support** | Win32 rendering options only had `AngleEgl` and `Software`. In sandboxed/virtual environments where ANGLE EGL fails, Avalonia fell back to Software which cannot initialize `OpenGlControlBase`. | Added `Win32RenderingMode.Wgl` to `Win32PlatformOptions.RenderingMode` for full native desktop OpenGL driver support before falling back. |
 | **Seekbar Two-Way Scrubbing Lock** | Two-way binding `PositionSeconds` had no user-input guard; dragging the seekbar did not seek and was immediately overwritten on the next 16ms poll tick. | Implemented `_isUpdatingPositionFromPlayback` guard and `OnPositionSecondsChanged` exact seeking. |
 | **Missing Window Keyboard & Canvas Hotkeys** | Shortcuts (`Space`, `Arrows`, `F`/`F11`, `M`, `Q`, `T`/`C`, `I`, `S`, `.`, `,`, etc.) were missing from Window message dispatching. | Implemented comprehensive `OnKeyDown` in `MainWindow.axaml.cs` and a 220ms canvas click timer distinguishing single-click play/pause from double-click fullscreen. |
+| **Fullscreen Window Frame Glitch** | Dynamically toggling `SystemDecorations` and `ExtendClientAreaToDecorationsHint` recreated Win32 window styles and broke local XAML margins. | Retained `ExtendClientAreaToDecorationsHint="True"` and toggled only `WindowState.FullScreen`. Style classes `.fullscreen` handle responsive margins. |
+| **Top Bar Title Overlap** | Horizontal `StackPanel` gave infinite measure width, preventing `TextTrimming="CharacterEllipsis"` from sizing to available space and overlapping top-right pin. | Replaced with responsive `Grid ColumnDefinitions="Auto, *"` where the title block has `TextTrimming="CharacterEllipsis"` and truncates dynamically right before the pin icon. |
+| **Intrusive Center Rectangle HUD** | Center rectangle HUD popped up during seeks and sound changes, obstructing video. | Removed center HUD entirely. Volume updates inline in the bottom slider; skip uses YouTube-style Left/Right side chevrons with seconds accumulation. |
+| **Canvas Mouse Wheel Sound/Brightness** | Canvas mouse wheel gestures caused accidental volume/brightness shifts while scrolling. | Removed canvas wheel handlers; volume is adjusted cleanly via slider or arrow keys. |
+| **Persistent Mouse Cursor During Playback** | Mouse cursor remained visible in middle of screen even when control strip faded. | Added auto-hiding cursor (`StandardCursorType.None`) when controls fade out during playback, restoring instantly on mouse move. |
 | **Sandboxie GPU Hook Conflict** | Sandboxie virtualizes GPU kernel hooks and named pipes (`SBIE2205`), blocking D3D11 shared memory and CUDA. | Configured resilient fallback handling so playback gracefully steps down decoders without hard-crashing. |
 
 ---
@@ -216,7 +221,7 @@ Run the automated test suite from the repository root:
 ```bash
 dotnet test
 ```
-*Current test suite status: **13 tests passing, 0 failures, 0 skipped**.*
+*Current test suite status: **24 tests passing, 0 failures, 0 skipped, 0 warnings**.*
 
 ### 7.2 Building the Project
 ```bash
