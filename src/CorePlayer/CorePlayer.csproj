@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <OutputPath Condition="'$(Configuration)' == 'Debug'">bin\DebugApp\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>

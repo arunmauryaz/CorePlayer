@@ -22,9 +22,9 @@
         <Grid>
             <!-- MPV OpenGL Hardware Video Surface -->
             <mpv:MpvView MpvContext="{Binding MpvContext}"
+                         Renderer="OpenGl"
                          HorizontalAlignment="Stretch"
-                         VerticalAlignment="Stretch"
-                         IsVisible="{Binding HasMedia}" />
+                         VerticalAlignment="Stretch" />
 
             <!-- Pure Blank Black Canvas when no media is loaded (No center icon or text) -->
             <Border IsVisible="{Binding !HasMedia}"

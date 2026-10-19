@@ -32,6 +32,7 @@ public class CorePlaybackEngine : ICorePlaybackEngine
     private bool _isNightModeActive;
     private VideoRotation _rotation = VideoRotation.Normal;
     private bool _isDisposed;
+    private bool _eofHandled;
     private int _pollTicks;
 
     public MpvContext Context => _context;
@@ -43,10 +44,18 @@ public class CorePlaybackEngine : ICorePlaybackEngine
     public int Brightness => _brightness;
     public double SubtitleDelay => _subtitleDelay;
     public string? CurrentFilePath => _currentFilePath;
-    public string? MediaTitle => _context.MediaTitle.Get() ?? Path.GetFileNameWithoutExtension(_currentFilePath);
-    public string? VideoCodec => _context.VideoCodec.Get();
-    public string? AudioCodec => _context.AudioCodec.Get();
-    public string? Resolution => _context.Width.Get() > 0 ? $"{_context.Width.Get()}x{_context.Height.Get()}" : null;
+    public string? MediaTitle => SafeGet(() => _context.MediaTitle.Get()) ?? Path.GetFileNameWithoutExtension(_currentFilePath);
+    public string? VideoCodec => SafeGet(() => _context.VideoCodec.Get());
+    public string? AudioCodec => SafeGet(() => _context.AudioCodec.Get());
+    public string? Resolution
+    {
+        get
+        {
+            var w = SafeGet(() => _context.Width.Get()) ?? 0;
+            var h = SafeGet(() => _context.Height.Get()) ?? 0;
+            return w > 0 && h > 0 ? $"{w}x{h}" : null;
+        }
+    }
     public string AspectRatio => _aspectRatio;
     public bool IsNightModeActive => _isNightModeActive;
     public VideoRotation Rotation => _rotation;
@@ -59,6 +68,18 @@ public class CorePlaybackEngine : ICorePlaybackEngine
     public event EventHandler? MediaEnded;
     public event EventHandler? TracksChanged;
     public event EventHandler<PlaybackStatistics>? StatisticsUpdated;
+
+    private static T? SafeGet<T>(Func<T?> getter, T? defaultValue = default)
+    {
+        try
+        {
+            return getter();
+        }
+        catch
+        {
+            return defaultValue;
+        }
+    }
 
     public CorePlaybackEngine(EngineOptions? options = null)
     {
@@ -92,15 +113,15 @@ public class CorePlaybackEngine : ICorePlaybackEngine
 
         try
         {
-            var isPaused = _context.Pause.Get() == true;
-            var currentlyPlaying = !isPaused && (_context.TimePos.Get() ?? 0) > 0;
+            var isPaused = SafeGet(() => _context.Pause.Get()) == true;
+            var timePos = SafeGet(() => _context.TimePos.Get());
+            var currentlyPlaying = !isPaused && (timePos ?? 0) > 0;
             if (currentlyPlaying != _isPlaying)
             {
                 _isPlaying = currentlyPlaying;
                 PlaybackStateChanged?.Invoke(this, EventArgs.Empty);
             }
 
-            var timePos = _context.TimePos.Get();
             if (timePos.HasValue)
             {
                 var newPos = TimeSpan.FromSeconds(Math.Max(0, timePos.Value));
@@ -111,7 +132,7 @@ public class CorePlaybackEngine : ICorePlaybackEngine
                 }
             }
 
-            var dur = _context.Duration.Get();
+            var dur = SafeGet(() => _context.Duration.Get());
             if (dur.HasValue && dur.Value > 0)
             {
                 var newDur = TimeSpan.FromSeconds(dur.Value);
@@ -123,9 +144,18 @@ public class CorePlaybackEngine : ICorePlaybackEngine
                 }
             }
 
-            if (_context.EofReached.Get() == true)
+            var eof = SafeGet(() => _context.EofReached.Get()) == true;
+            if (eof)
             {
-                MediaEnded?.Invoke(this, EventArgs.Empty);
+                if (!_eofHandled)
+                {
+                    _eofHandled = true;
+                    MediaEnded?.Invoke(this, EventArgs.Empty);
+                }
+            }
+            else
+            {
+                _eofHandled = false;
             }
 
             _pollTicks++;
@@ -134,9 +164,9 @@ public class CorePlaybackEngine : ICorePlaybackEngine
                 StatisticsUpdated?.Invoke(this, GetCurrentStatistics());
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // Ignore polling errors
+            File.AppendAllText("crash.log", $"[{DateTime.Now:HH:mm:ss}] Poll tick unhandled: {ex}\n");
         }
     }
 
@@ -148,13 +178,20 @@ public class CorePlaybackEngine : ICorePlaybackEngine
         _currentFilePath = mediaPath;
         _position = TimeSpan.Zero;
         _duration = TimeSpan.Zero;
+        _eofHandled = false;
 
-        var sanitized = mediaPath.Replace("\"", "\\\"");
-        _context.RunCommandString($"loadfile \"{sanitized}\"");
+        _context.RunCommand(default, "loadfile", mediaPath);
 
         if (startPosition > 0)
         {
-            _context.TimePos.Set(startPosition);
+            try
+            {
+                _context.TimePos.Set(startPosition);
+            }
+            catch
+            {
+                // File may still be loading
+            }
         }
 
         try
@@ -162,8 +199,7 @@ public class CorePlaybackEngine : ICorePlaybackEngine
             var discoveredSubs = _subtitleSubsystem.FindSubtitlesForMedia(mediaPath);
             foreach (var sub in discoveredSubs)
             {
-                var sanSub = sub.Replace("\"", "\\\"");
-                _context.RunCommandString($"sub-add \"{sanSub}\" auto");
+                _context.RunCommand(default, "sub-add", sub, "auto");
             }
         }
         catch
@@ -407,8 +443,7 @@ public class CorePlaybackEngine : ICorePlaybackEngine
     {
         if (File.Exists(path))
         {
-            var sanitized = path.Replace("\"", "\\\"");
-            _context.RunCommandString($"sub-add \"{sanitized}\"");
+            _context.RunCommand(default, "sub-add", path);
             RefreshTracks();
         }
     }
@@ -416,7 +451,7 @@ public class CorePlaybackEngine : ICorePlaybackEngine
     public void StepFrame(bool forward = true)
     {
         Pause();
-        _context.RunCommandString(forward ? "frame-step" : "frame-back-step");
+        _context.RunCommand(default, forward ? "frame-step" : "frame-back-step");
     }
 
     public string TakeSnapshot(bool includeSubtitles = true)
@@ -431,9 +466,8 @@ public class CorePlaybackEngine : ICorePlaybackEngine
         var fileName = $"Snap_{DateTime.Now:yyyyMMdd_HHmmss}.png";
         var fullPath = Path.Combine(folder, fileName);
 
-        var sanitized = fullPath.Replace("\"", "\\\"");
         var subArg = includeSubtitles ? "subtitles" : "video";
-        _context.RunCommandString($"screenshot-to-file \"{sanitized}\" {subArg}");
+        _context.RunCommand(default, "screenshot-to-file", fullPath, subArg);
         return fullPath;
     }
 

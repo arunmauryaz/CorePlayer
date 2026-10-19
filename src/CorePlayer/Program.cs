@@ -3,6 +3,7 @@ using Avalonia.Win32;
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace CorePlayer;
 
@@ -32,6 +33,20 @@ sealed class Program
                 return IntPtr.Zero;
             });
         }
+
+        AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+        {
+            var msg = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] UNHANDLED DOMAIN EXCEPTION:\n{e.ExceptionObject}\nIsTerminating: {e.IsTerminating}\n";
+            File.AppendAllText("crash.log", msg);
+            Console.Error.WriteLine(msg);
+        };
+
+        TaskScheduler.UnobservedTaskException += (s, e) =>
+        {
+            var msg = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] UNOBSERVED TASK EXCEPTION:\n{e.Exception}\n";
+            File.AppendAllText("crash.log", msg);
+            Console.Error.WriteLine(msg);
+        };
 
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }

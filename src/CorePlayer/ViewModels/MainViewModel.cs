@@ -460,11 +460,11 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         CurrentItem = item;
         CurrentIndex = Playlist.IndexOf(item);
         ShowResumePrompt = false;
+        HasMedia = true;
 
         _playback.Load(item.FilePath);
         MediaTitle = item.Title;
         UpdateHeaderTitle();
-        HasMedia = true;
         ShowControls();
     }
 
