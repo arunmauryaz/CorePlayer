@@ -342,7 +342,7 @@
                     </Button>
 
                     <!-- Volume Group (Generous hit-test container for smooth slider interaction) -->
-                    <Border Classes="volume-box" Background="Transparent" VerticalAlignment="Stretch">
+                    <Border Classes="volume-box" Background="Transparent" VerticalAlignment="Center">
                         <StackPanel Classes="volume-container" Orientation="Horizontal" VerticalAlignment="Center" Background="Transparent">
                             <!-- Volume / Mute Button -->
                             <Button Classes="iris-btn" Command="{Binding ToggleMuteCommand}" ToolTip.Tip="Mute (M)">
