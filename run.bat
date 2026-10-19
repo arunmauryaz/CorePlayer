@@ -6,7 +6,7 @@ echo =======================================================
 echo.
 
 cd /d "%~dp0"
-dotnet run --project src\CorePlayer\CorePlayer.csproj
+dotnet run --project src\CorePlayer\CorePlayer.csproj -c Release -- %*
 
 if %ERRORLEVEL% NEQ 0 (
     echo.
