@@ -21,6 +21,7 @@ public partial class MainWindow : Window
     private DispatcherTimer? _canvasClickTimer;
     private Point _lastPointerPosition;
     private readonly Cursor _hiddenCursor = new(StandardCursorType.None);
+    private bool _isUpdatingFullscreen;
 
     public MainWindow()
     {
@@ -50,12 +51,22 @@ public partial class MainWindow : Window
 
         this.GetPropertyChangedObservable(WindowStateProperty).Subscribe(_ =>
         {
+            if (_isUpdatingFullscreen) return;
             if (ViewModel != null)
             {
                 bool isFs = WindowState == WindowState.FullScreen;
                 if (ViewModel.IsFullscreen != isFs)
                 {
-                    ViewModel.IsFullscreen = isFs;
+                    _isUpdatingFullscreen = true;
+                    try
+                    {
+                        ViewModel.IsFullscreen = isFs;
+                        ExtendClientAreaToDecorationsHint = !isFs;
+                    }
+                    finally
+                    {
+                        _isUpdatingFullscreen = false;
+                    }
                 }
             }
         });
@@ -92,20 +103,28 @@ public partial class MainWindow : Window
 
     private void UpdateFullscreenState(bool isFullscreen)
     {
-        if (isFullscreen)
+        if (_isUpdatingFullscreen) return;
+        _isUpdatingFullscreen = true;
+        try
         {
-            if (WindowState != WindowState.FullScreen)
+            if (isFullscreen)
             {
-                _previousWindowState = WindowState;
-                WindowState = WindowState.FullScreen;
+                if (WindowState != WindowState.FullScreen)
+                {
+                    _previousWindowState = WindowState == WindowState.FullScreen ? WindowState.Normal : WindowState;
+                    ExtendClientAreaToDecorationsHint = false;
+                    WindowState = WindowState.FullScreen;
+                }
             }
-        }
-        else
-        {
-            if (WindowState == WindowState.FullScreen)
+            else
             {
+                ExtendClientAreaToDecorationsHint = true;
                 WindowState = _previousWindowState == WindowState.FullScreen ? WindowState.Normal : _previousWindowState;
             }
+        }
+        finally
+        {
+            _isUpdatingFullscreen = false;
         }
     }
 

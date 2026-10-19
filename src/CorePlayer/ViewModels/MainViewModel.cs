@@ -772,7 +772,13 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         IsTracksMenuOpen = !IsTracksMenuOpen;
         if (IsTracksMenuOpen)
         {
-            SelectedTracksTab = 1; // Default to Subtitles tab
+            _playback.RefreshTracks();
+            OnTracksChanged(this, EventArgs.Empty);
+
+            if (SelectedTracksTab != 0 && SelectedTracksTab != 1)
+            {
+                SelectedTracksTab = 0;
+            }
             IsQueueOpen = false;
             IsInfoModalOpen = false;
             IsMoreMenuOpen = false;
@@ -783,12 +789,24 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     public void SelectAudioTab()
     {
         SelectedTracksTab = 0;
+        _playback.RefreshTracks();
+        OnTracksChanged(this, EventArgs.Empty);
     }
 
     [RelayCommand]
     public void SelectSubtitlesTab()
     {
         SelectedTracksTab = 1;
+        _playback.RefreshTracks();
+        OnTracksChanged(this, EventArgs.Empty);
+    }
+
+    [RelayCommand]
+    public void DisableSubtitles()
+    {
+        _playback.SelectTrack(new TrackInfo { Id = 0, Kind = TrackKind.Subtitle, Title = "Off" });
+        OnTracksChanged(this, EventArgs.Empty);
+        ShowToast("Subtitles: Off");
     }
 
     [RelayCommand]
@@ -972,7 +990,8 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     public void SelectTrack(TrackInfo track)
     {
         _playback.SelectTrack(track);
-        ShowToast($"Selected {track.DisplayText}");
+        OnTracksChanged(this, EventArgs.Empty);
+        ShowToast($"Selected: {track.DisplayText}");
     }
 
     [RelayCommand]

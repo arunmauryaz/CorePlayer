@@ -54,6 +54,7 @@ public interface IPlaybackService
     void ToggleNightMode();
     void SetAspectRatio(string ratio);
     void SelectTrack(TrackInfo track);
+    void RefreshTracks();
     void AddSubtitleFile(string path);
     void StepFrame(bool forward = true);
     string TakeSnapshot();
@@ -131,6 +132,7 @@ public class MpvPlaybackService : IPlaybackService, ICorePlaybackEngine
     public void ToggleNightMode() => _engine.ToggleNightMode();
     public void SetAspectRatio(string ratio) => _engine.SetAspectRatio(ratio);
     public void SelectTrack(TrackInfo track) => _engine.SelectTrack(track);
+    public void RefreshTracks() => _engine.RefreshTracks();
     public void AddSubtitleFile(string path) => _engine.AddSubtitleFile(path);
     public void StepFrame(bool forward = true) => _engine.StepFrame(forward);
     public string TakeSnapshot() => _engine.TakeSnapshot(true);

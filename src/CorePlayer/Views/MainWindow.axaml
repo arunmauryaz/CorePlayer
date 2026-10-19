@@ -232,18 +232,14 @@
                                   Classes="liquid-icon" />
                     </Button>
 
-                    <!-- Dedicated Fullscreen Window Controls (Shown only in fullscreen so controls don't disappear) -->
-                    <StackPanel Orientation="Horizontal" Spacing="2" IsVisible="{Binding IsFullscreen}" VerticalAlignment="Center" Margin="6,0,8,0">
-                        <!-- Minimize -->
-                        <Button Classes="iris-btn" Click="OnMinimizeClick" ToolTip.Tip="Minimize" Width="28" Height="28">
-                            <PathIcon Data="{StaticResource MinimizeIcon}" Width="12" Height="12" Classes="liquid-icon" />
-                        </Button>
-                        <!-- Restore / Exit Fullscreen -->
-                        <Button Classes="iris-btn" Command="{Binding ToggleFullscreenCommand}" ToolTip.Tip="Exit Fullscreen (F11 / Esc)" Width="28" Height="28">
-                            <PathIcon Data="{StaticResource RestoreIcon}" Width="12" Height="12" Classes="liquid-icon" />
+                    <!-- Fullscreen Window Controls (Shown only in fullscreen when native caption buttons are hidden) -->
+                    <StackPanel Orientation="Horizontal" Spacing="2" IsVisible="{Binding IsFullscreen}" VerticalAlignment="Center" Margin="4,0,4,0">
+                        <!-- Exit Fullscreen -->
+                        <Button Classes="iris-btn" Command="{Binding ToggleFullscreenCommand}" ToolTip.Tip="Exit Fullscreen (F / Esc)" Width="28" Height="28">
+                            <PathIcon Data="{StaticResource ExitFullscreenIcon}" Width="14" Height="14" Classes="liquid-icon" />
                         </Button>
                         <!-- Close -->
-                        <Button Classes="iris-btn iris-close-btn" Click="OnCloseClick" ToolTip.Tip="Close" Width="28" Height="28">
+                        <Button Classes="iris-btn iris-close-btn" Click="OnCloseClick" ToolTip.Tip="Close (Alt+F4)" Width="28" Height="28">
                             <PathIcon Data="{StaticResource CloseIcon}" Width="10" Height="10" Classes="liquid-icon" />
                         </Button>
                     </StackPanel>
@@ -551,14 +547,24 @@
                 <!-- 1. AUDIO TAB VIEW -->
                 <StackPanel IsVisible="{Binding IsAudioTabSelected}" Spacing="4">
                     <TextBlock Text="Audio Streams" FontSize="10" FontWeight="SemiBold" Foreground="#888890" Margin="4,2,0,2" />
-                    <ScrollViewer MaxHeight="170">
+                    <TextBlock Text="No audio streams detected"
+                               FontSize="11"
+                               Foreground="#666670"
+                               Margin="8,4,8,4"
+                               IsVisible="{Binding !AudioTracks.Count}" />
+                    <ScrollViewer MaxHeight="180">
                         <ItemsControl ItemsSource="{Binding AudioTracks}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate DataType="models:TrackInfo">
                                     <Button Classes="iris-menu-item"
+                                            Classes.active="{Binding IsSelected}"
                                             Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).SelectTrackCommand}"
-                                            CommandParameter="{Binding}">
-                                        <TextBlock Text="{Binding DisplayText}" FontSize="11" TextTrimming="CharacterEllipsis" />
+                                            CommandParameter="{Binding}"
+                                            Margin="0,1,0,1">
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <TextBlock Grid.Column="0" Text="{Binding DisplayText}" FontSize="11" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                            <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="10" Height="10" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsSelected}" VerticalAlignment="Center" Margin="6,0,2,0" />
+                                        </Grid>
                                     </Button>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
@@ -569,14 +575,28 @@
                 <!-- 2. SUBTITLES TAB VIEW -->
                 <StackPanel IsVisible="{Binding IsSubtitlesTabSelected}" Spacing="6">
                     <TextBlock Text="Subtitle Streams" FontSize="10" FontWeight="SemiBold" Foreground="#888890" Margin="4,2,0,2" />
+                    <!-- Option to Turn Off Subtitles -->
+                    <Button Classes="iris-menu-item" Command="{Binding DisableSubtitlesCommand}" Margin="0,1,0,1">
+                        <TextBlock Text="None (Subtitles Off)" FontSize="11" Foreground="#AAAAAA" />
+                    </Button>
+                    <TextBlock Text="No embedded subtitles detected"
+                               FontSize="11"
+                               Foreground="#666670"
+                               Margin="8,2,8,2"
+                               IsVisible="{Binding !SubtitleTracks.Count}" />
                     <ScrollViewer MaxHeight="140">
                         <ItemsControl ItemsSource="{Binding SubtitleTracks}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate DataType="models:TrackInfo">
                                     <Button Classes="iris-menu-item"
+                                            Classes.active="{Binding IsSelected}"
                                             Command="{Binding $parent[ItemsControl].((vm:MainViewModel)DataContext).SelectTrackCommand}"
-                                            CommandParameter="{Binding}">
-                                        <TextBlock Text="{Binding DisplayText}" FontSize="11" TextTrimming="CharacterEllipsis" />
+                                            CommandParameter="{Binding}"
+                                            Margin="0,1,0,1">
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <TextBlock Grid.Column="0" Text="{Binding DisplayText}" FontSize="11" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                            <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="10" Height="10" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsSelected}" VerticalAlignment="Center" Margin="6,0,2,0" />
+                                        </Grid>
                                     </Button>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>

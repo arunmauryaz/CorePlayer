@@ -74,15 +74,33 @@ public class MainViewModelTests
         public void SetAudioDelay(double milliseconds) { }
         public void ToggleNightMode() => IsNightModeActive = !IsNightModeActive;
         public void SetAspectRatio(string ratio) => AspectRatio = ratio;
-        public void SelectTrack(TrackInfo track) { }
+        public List<TrackInfo> FakeAudioTracks { get; } = [];
+        public List<TrackInfo> FakeSubtitleTracks { get; } = [];
+        public IReadOnlyList<TrackInfo> AudioTracks => FakeAudioTracks;
+        public IReadOnlyList<TrackInfo> SubtitleTracks => FakeSubtitleTracks;
+        public TrackInfo? LastSelectedTrack { get; private set; }
+        public int RefreshTracksCallCount { get; private set; }
+
+        public void SelectTrack(TrackInfo track)
+        {
+            LastSelectedTrack = track;
+            foreach (var t in FakeAudioTracks) t.IsSelected = (t.Id == track.Id && t.Kind == track.Kind);
+            foreach (var t in FakeSubtitleTracks) t.IsSelected = (t.Id == track.Id && t.Kind == track.Kind);
+            TracksChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void RefreshTracks()
+        {
+            RefreshTracksCallCount++;
+            TracksChanged?.Invoke(this, EventArgs.Empty);
+        }
+
         public void AddSubtitleFile(string path) { }
         public void StepFrame(bool forward = true) { }
         public string TakeSnapshot() => "dummy.png";
         public string TakeSnapshot(bool includeSubtitles) => "dummy.png";
         public PlaybackStatistics GetCurrentStatistics() => new();
         public void AttachContext(HanumanInstitute.LibMpv.MpvContext context) { }
-        public IReadOnlyList<TrackInfo> AudioTracks => [];
-        public IReadOnlyList<TrackInfo> SubtitleTracks => [];
     }
 
     private class FakeStorageService : IStorageService
@@ -254,5 +272,115 @@ public class MainViewModelTests
         Assert.Equal(350.0, playback.Position.TotalSeconds);
         Assert.True(vm.IsToastVisible);
         Assert.Contains("Resumed playback", vm.ToastMessage);
+    }
+
+    [Fact]
+    public void TrackInfo_DisplayText_FormatsLanguageTitleAndCodec()
+    {
+        var track = new TrackInfo
+        {
+            Id = 1,
+            Language = "Japanese",
+            Title = "Original Japanese",
+            Codec = "aac"
+        };
+        Assert.Equal("Japanese • Original Japanese • [AAC]", track.DisplayText);
+    }
+
+    [Fact]
+    public void TrackInfo_DisplayText_DeduplicatesIdenticalTitleAndLanguage()
+    {
+        var track = new TrackInfo
+        {
+            Id = 2,
+            Language = "Hindi",
+            Title = "Hindi",
+            Codec = "eac3"
+        };
+        Assert.Equal("Hindi • [EAC3]", track.DisplayText);
+    }
+
+    [Fact]
+    public void TrackInfo_DisplayText_FallsBackToTrackId_WhenEmpty()
+    {
+        var track = new TrackInfo { Id = 3 };
+        Assert.Equal("Track #3", track.DisplayText);
+    }
+
+    [Fact]
+    public void ToggleTracksMenu_RefreshesTracksAndPopulatesLists()
+    {
+        var playback = new FakePlaybackService();
+        var storage = new FakeStorageService();
+        playback.FakeAudioTracks.Add(new TrackInfo { Id = 1, Kind = TrackKind.Audio, Language = "Japanese", IsSelected = true });
+        playback.FakeAudioTracks.Add(new TrackInfo { Id = 2, Kind = TrackKind.Audio, Language = "Hindi", IsSelected = false });
+        playback.FakeSubtitleTracks.Add(new TrackInfo { Id = 1, Kind = TrackKind.Subtitle, Language = "English", IsSelected = true });
+
+        using var vm = new MainViewModel(playback, storage);
+        vm.ToggleTracksMenu();
+
+        Assert.True(vm.IsTracksMenuOpen);
+        Assert.Equal(1, playback.RefreshTracksCallCount);
+        Assert.Equal(2, vm.AudioTracks.Count);
+        Assert.Single(vm.SubtitleTracks);
+        Assert.Equal("Japanese", vm.AudioTracks[0].Language);
+        Assert.Equal("Hindi", vm.AudioTracks[1].Language);
+    }
+
+    [Fact]
+    public void SelectTrack_UpdatesTrackSelectionAndShowsToast()
+    {
+        var playback = new FakePlaybackService();
+        var storage = new FakeStorageService();
+        var t1 = new TrackInfo { Id = 1, Kind = TrackKind.Audio, Language = "Japanese", IsSelected = true };
+        var t2 = new TrackInfo { Id = 2, Kind = TrackKind.Audio, Language = "Hindi", IsSelected = false };
+        playback.FakeAudioTracks.Add(t1);
+        playback.FakeAudioTracks.Add(t2);
+
+        using var vm = new MainViewModel(playback, storage);
+        vm.ToggleTracksMenu();
+
+        vm.SelectTrack(t2);
+
+        Assert.Equal(t2, playback.LastSelectedTrack);
+        Assert.True(t2.IsSelected);
+        Assert.False(t1.IsSelected);
+        Assert.True(vm.IsToastVisible);
+        Assert.Contains("Hindi", vm.ToastMessage);
+    }
+
+    [Fact]
+    public void DisableSubtitles_SelectsOffSubtitleTrack()
+    {
+        var playback = new FakePlaybackService();
+        var storage = new FakeStorageService();
+        playback.FakeSubtitleTracks.Add(new TrackInfo { Id = 1, Kind = TrackKind.Subtitle, Language = "English", IsSelected = true });
+
+        using var vm = new MainViewModel(playback, storage);
+        vm.ToggleTracksMenu();
+
+        vm.DisableSubtitles();
+
+        Assert.NotNull(playback.LastSelectedTrack);
+        Assert.Equal(0, playback.LastSelectedTrack.Id);
+        Assert.Equal(TrackKind.Subtitle, playback.LastSelectedTrack.Kind);
+        Assert.True(vm.IsToastVisible);
+        Assert.Contains("Subtitles: Off", vm.ToastMessage);
+    }
+
+    [Fact]
+    public void ToggleFullscreen_TogglesViewModelIsFullscreen()
+    {
+        var playback = new FakePlaybackService();
+        var storage = new FakeStorageService();
+
+        using var vm = new MainViewModel(playback, storage);
+        Assert.False(vm.IsFullscreen);
+
+        vm.ToggleFullscreen();
+        Assert.True(vm.IsFullscreen);
+
+        vm.ToggleFullscreen();
+        Assert.False(vm.IsFullscreen);
     }
 }

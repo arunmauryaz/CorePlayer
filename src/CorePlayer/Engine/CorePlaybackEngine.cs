@@ -21,6 +21,10 @@ public class CorePlaybackEngine : ICorePlaybackEngine
     private readonly List<TrackInfo> _subtitleTracks = [];
     private readonly EngineOptions _options;
 
+    private int _lastTrackCount = -1;
+    private string _lastAid = "";
+    private string _lastSid = "";
+
     private string? _currentFilePath;
     private bool _isPlaying;
     private TimeSpan _position = TimeSpan.Zero;
@@ -186,6 +190,24 @@ public class CorePlaybackEngine : ICorePlaybackEngine
                 }
             }
 
+            var currentTrackCount = SafeGet(() =>
+            {
+                var cStr = _context.GetPropertyString("track-list/count");
+                if (int.TryParse(cStr, out var c)) return c;
+                return _context.TrackListCount.Get();
+            }) ?? 0;
+
+            var currentAid = SafeGet(() => _context.GetPropertyString("aid")) ?? "";
+            var currentSid = SafeGet(() => _context.GetPropertyString("sid")) ?? "";
+
+            if (currentTrackCount != _lastTrackCount || currentAid != _lastAid || currentSid != _lastSid)
+            {
+                _lastTrackCount = currentTrackCount;
+                _lastAid = currentAid;
+                _lastSid = currentSid;
+                RefreshTracks();
+            }
+
             var eof = SafeGet(() => _context.EofReached.Get()) == true;
             if (eof)
             {
@@ -221,6 +243,9 @@ public class CorePlaybackEngine : ICorePlaybackEngine
         _position = TimeSpan.Zero;
         _duration = TimeSpan.Zero;
         _eofHandled = false;
+        _lastTrackCount = -1;
+        _lastAid = "";
+        _lastSid = "";
 
         if (startPosition > 0)
         {
@@ -482,14 +507,10 @@ public class CorePlaybackEngine : ICorePlaybackEngine
     {
         try
         {
-            if (track.Kind == TrackKind.Audio)
-            {
-                _context.Option["aid"].Set(track.Id.ToString());
-            }
-            else
-            {
-                _context.Option["sid"].Set(track.Id.ToString());
-            }
+            var prop = track.Kind == TrackKind.Audio ? "aid" : "sid";
+            var val = track.Id <= 0 ? "no" : track.Id.ToString();
+            try { _context.SetPropertyString(prop, val); } catch { }
+            try { _context.RunCommandString($"no-osd set {prop} {val}"); } catch { }
             RefreshTracks();
         }
         catch
@@ -618,50 +639,155 @@ public class CorePlaybackEngine : ICorePlaybackEngine
         }
     }
 
-    private void RefreshTracks()
+    public void RefreshTracks()
     {
         try
         {
-            _audioTracks.Clear();
-            _subtitleTracks.Clear();
+            var audioList = new List<TrackInfo>();
+            var subList = new List<TrackInfo>();
 
-            var count = _context.TrackListCount.Get() ?? 0;
+            int count = 0;
+            var countStr = SafeGet(() => _context.GetPropertyString("track-list/count"));
+            if (!int.TryParse(countStr, out count))
+            {
+                count = SafeGet(() => _context.TrackListCount.Get()) ?? 0;
+            }
+
+            var currentAid = SafeGet(() => _context.GetPropertyString("aid")) ?? "";
+            var currentSid = SafeGet(() => _context.GetPropertyString("sid")) ?? "";
+
             for (int i = 0; i < count; i++)
             {
-                var id = _context.TrackListId[i].Get() ?? i;
-                var type = _context.TrackListType[i].Get();
-                var lang = _context.TrackListLanguage[i].Get() ?? "";
-                var codec = _context.TrackListCodec[i].Get() ?? "";
-                var selected = _context.TrackListIsSelected[i].Get() == true;
-                var title = !string.IsNullOrWhiteSpace(lang) ? lang : $"Track #{id}";
-
-                var track = new TrackInfo
+                try
                 {
-                    Id = id,
-                    Language = lang,
-                    Title = title,
-                    Codec = codec,
-                    IsSelected = selected,
-                    Kind = string.Equals(type, "audio", StringComparison.OrdinalIgnoreCase) 
-                        ? TrackKind.Audio 
-                        : TrackKind.Subtitle
-                };
+                    var type = SafeGet(() => _context.GetPropertyString($"track-list/{i}/type"))
+                        ?? SafeGet(() => _context.TrackListType[i].Get());
 
-                if (track.Kind == TrackKind.Audio)
-                {
-                    _audioTracks.Add(track);
+                    if (string.IsNullOrEmpty(type))
+                        continue;
+
+                    var isAudio = string.Equals(type, "audio", StringComparison.OrdinalIgnoreCase);
+                    var isSub = string.Equals(type, "sub", StringComparison.OrdinalIgnoreCase);
+
+                    if (!isAudio && !isSub)
+                        continue;
+
+                    var idStr = SafeGet(() => _context.GetPropertyString($"track-list/{i}/id"));
+                    int id = int.TryParse(idStr, out var parsedId)
+                        ? parsedId
+                        : (SafeGet(() => _context.TrackListId[i].Get()) ?? (i + 1));
+
+                    var selectedStr = SafeGet(() => _context.GetPropertyString($"track-list/{i}/selected"));
+                    bool selected = string.Equals(selectedStr, "yes", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(selectedStr, "true", StringComparison.OrdinalIgnoreCase)
+                        || (isAudio && !string.IsNullOrEmpty(currentAid) && currentAid == id.ToString())
+                        || (isSub && !string.IsNullOrEmpty(currentSid) && currentSid == id.ToString())
+                        || (SafeGet(() => _context.TrackListIsSelected[i].Get()) == true);
+
+                    var rawTitle = SafeGet(() => _context.GetPropertyString($"track-list/{i}/title")) ?? "";
+                    var langCode = SafeGet(() => _context.GetPropertyString($"track-list/{i}/lang"))
+                        ?? SafeGet(() => _context.TrackListLanguage[i].Get()) ?? "";
+                    var codec = SafeGet(() => _context.GetPropertyString($"track-list/{i}/codec"))
+                        ?? SafeGet(() => _context.TrackListCodec[i].Get()) ?? "";
+
+                    var langDisplay = FormatLanguageName(langCode);
+
+                    var track = new TrackInfo
+                    {
+                        Id = id,
+                        Language = langDisplay,
+                        Title = rawTitle,
+                        Codec = codec,
+                        IsSelected = selected,
+                        Kind = isAudio ? TrackKind.Audio : TrackKind.Subtitle
+                    };
+
+                    if (isAudio)
+                    {
+                        audioList.Add(track);
+                    }
+                    else
+                    {
+                        subList.Add(track);
+                    }
                 }
-                else if (string.Equals(type, "sub", StringComparison.OrdinalIgnoreCase))
+                catch
                 {
-                    _subtitleTracks.Add(track);
+                    // Continue with next track if any individual track has unexpected properties
                 }
             }
+
+            _audioTracks.Clear();
+            _audioTracks.AddRange(audioList);
+
+            _subtitleTracks.Clear();
+            _subtitleTracks.AddRange(subList);
+
             TracksChanged?.Invoke(this, EventArgs.Empty);
         }
         catch
         {
             // Ignore track enumeration errors
         }
+    }
+
+    private static string FormatLanguageName(string? code)
+    {
+        if (string.IsNullOrWhiteSpace(code)) return "";
+        code = code.Trim();
+
+        var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "eng", "English" }, { "en", "English" },
+            { "hin", "Hindi" }, { "hi", "Hindi" },
+            { "jpn", "Japanese" }, { "ja", "Japanese" },
+            { "spa", "Spanish" }, { "es", "Spanish" },
+            { "fra", "French" }, { "fre", "French" }, { "fr", "French" },
+            { "deu", "German" }, { "ger", "German" }, { "de", "German" },
+            { "ita", "Italian" }, { "it", "Italian" },
+            { "kor", "Korean" }, { "ko", "Korean" },
+            { "zho", "Chinese" }, { "chi", "Chinese" }, { "zh", "Chinese" },
+            { "rus", "Russian" }, { "ru", "Russian" },
+            { "por", "Portuguese" }, { "pt", "Portuguese" },
+            { "ara", "Arabic" }, { "ar", "Arabic" },
+            { "tam", "Tamil" }, { "ta", "Tamil" },
+            { "tel", "Telugu" }, { "te", "Telugu" },
+            { "ben", "Bengali" }, { "bn", "Bengali" },
+            { "mar", "Marathi" }, { "mr", "Marathi" },
+            { "pan", "Punjabi" }, { "pa", "Punjabi" },
+            { "mal", "Malayalam" }, { "ml", "Malayalam" },
+            { "kan", "Kannada" }, { "kn", "Kannada" },
+            { "guj", "Gujarati" }, { "gu", "Gujarati" },
+            { "urd", "Urdu" }, { "ur", "Urdu" },
+            { "vie", "Vietnamese" }, { "vi", "Vietnamese" },
+            { "tha", "Thai" }, { "th", "Thai" },
+            { "ind", "Indonesian" }, { "id", "Indonesian" },
+            { "pol", "Polish" }, { "pl", "Polish" },
+            { "tur", "Turkish" }, { "tr", "Turkish" },
+            { "nld", "Dutch" }, { "dut", "Dutch" }, { "nl", "Dutch" },
+            { "swe", "Swedish" }, { "sv", "Swedish" },
+            { "nor", "Norwegian" }, { "no", "Norwegian" },
+            { "dan", "Danish" }, { "da", "Danish" },
+            { "fin", "Finnish" }, { "fi", "Finnish" },
+            { "ces", "Czech" }, { "cze", "Czech" }, { "cs", "Czech" },
+            { "hun", "Hungarian" }, { "hu", "Hungarian" },
+            { "ell", "Greek" }, { "gre", "Greek" }, { "el", "Greek" },
+            { "heb", "Hebrew" }, { "he", "Hebrew" },
+            { "ukr", "Ukrainian" }, { "uk", "Ukrainian" }
+        };
+
+        if (map.TryGetValue(code, out var name))
+            return name;
+
+        try
+        {
+            var culture = CultureInfo.GetCultureInfo(code);
+            if (!string.IsNullOrWhiteSpace(culture.EnglishName) && !culture.EnglishName.StartsWith("Unknown", StringComparison.OrdinalIgnoreCase))
+                return culture.EnglishName;
+        }
+        catch { }
+
+        return code.Length <= 4 ? code.ToUpperInvariant() : char.ToUpperInvariant(code[0]) + code[1..];
     }
 
     public void Dispose()

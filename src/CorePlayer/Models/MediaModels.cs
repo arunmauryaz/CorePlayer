@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace CorePlayer.Models;
@@ -61,7 +62,23 @@ public class TrackInfo
     public bool IsSelected { get; set; }
     public TrackKind Kind { get; set; }
 
-    public string DisplayText => string.IsNullOrWhiteSpace(Language)
-        ? (!string.IsNullOrWhiteSpace(Title) ? Title : $"Track #{Id}")
-        : $"{Language} - {(!string.IsNullOrWhiteSpace(Title) ? Title : Codec)}";
+    public string DisplayText
+    {
+        get
+        {
+            var parts = new List<string>();
+            if (!string.IsNullOrWhiteSpace(Language))
+                parts.Add(Language);
+            if (!string.IsNullOrWhiteSpace(Title) && !string.Equals(Title, Language, StringComparison.OrdinalIgnoreCase))
+                parts.Add(Title);
+            if (!string.IsNullOrWhiteSpace(Codec))
+                parts.Add($"[{Codec.ToUpperInvariant()}]");
+
+            if (parts.Count > 0)
+                return string.Join(" • ", parts);
+
+            return $"Track #{Id}";
+        }
+    }
 }
+

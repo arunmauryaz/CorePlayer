@@ -49,6 +49,7 @@ public interface ICorePlaybackEngine : IDisposable
     void ToggleNightMode();
     void SetAspectRatio(string ratio);
     void SelectTrack(TrackInfo track);
+    void RefreshTracks();
     void AddSubtitleFile(string path);
     void StepFrame(bool forward = true);
     string TakeSnapshot(bool includeSubtitles = true);

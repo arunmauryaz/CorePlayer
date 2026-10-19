@@ -177,6 +177,11 @@
         <Setter Property="Background" Value="#26FFFFFF" />
         <Setter Property="Foreground" Value="#FFFFFF" />
     </Style>
+    <Style Selector="Button.iris-menu-item.active">
+        <Setter Property="Background" Value="#24FFFFFF" />
+        <Setter Property="Foreground" Value="{StaticResource AccentLiquidBrush}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
 
     <!-- Liquid Glass Fat 12px Seekbar with Small 7px Ball Thumb - Centered Layout -->
     <Style Selector="Slider.iris-slider">
