@@ -228,12 +228,9 @@
                         <PathIcon Data="{StaticResource MinimizeIcon}" Width="12" Height="12" Classes="liquid-icon" />
                     </Button>
 
-                    <!-- Maximize / Restore (The Box Button) -->
+                    <!-- Maximize / Restore (The Box Button) - Fixed across windowed and fullscreen -->
                     <Button Classes="iris-btn" Click="OnMaximizeClick" ToolTip.Tip="Maximize / Restore" Width="28" Height="28">
-                        <Panel>
-                            <PathIcon Data="{StaticResource RestoreIcon}" Width="12" Height="12" Classes="liquid-icon" IsVisible="{Binding IsFullscreen}" />
-                            <PathIcon Data="{StaticResource MaximizeIcon}" Width="12" Height="12" Classes="liquid-icon" IsVisible="{Binding !IsFullscreen}" />
-                        </Panel>
+                        <PathIcon Data="{StaticResource MaximizeIcon}" Width="12" Height="12" Classes="liquid-icon" />
                     </Button>
 
                     <!-- Close / Quit -->
