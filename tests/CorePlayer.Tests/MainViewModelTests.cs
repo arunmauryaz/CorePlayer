@@ -377,10 +377,25 @@ public class MainViewModelTests
         using var vm = new MainViewModel(playback, storage);
         Assert.False(vm.IsFullscreen);
 
-        vm.ToggleFullscreen();
-        Assert.True(vm.IsFullscreen);
+        var propertyChangedFired = false;
+        string? changedPropertyName = null;
+        vm.PropertyChanged += (s, e) =>
+        {
+            if (e.PropertyName == nameof(MainViewModel.IsFullscreen))
+            {
+                propertyChangedFired = true;
+                changedPropertyName = e.PropertyName;
+            }
+        };
 
         vm.ToggleFullscreen();
+        Assert.True(vm.IsFullscreen);
+        Assert.True(propertyChangedFired);
+        Assert.Equal(nameof(MainViewModel.IsFullscreen), changedPropertyName);
+
+        propertyChangedFired = false;
+        vm.ToggleFullscreen();
         Assert.False(vm.IsFullscreen);
+        Assert.True(propertyChangedFired);
     }
 }

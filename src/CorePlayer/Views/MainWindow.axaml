@@ -12,7 +12,7 @@
         WindowStartupLocation="CenterScreen"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaChromeHints="NoChrome"
-        ExtendClientAreaTitleBarHeightHint="32"
+        ExtendClientAreaTitleBarHeightHint="-1"
         Background="#000000"
         Topmost="{Binding IsAlwaysOnTop}">
 

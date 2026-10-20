@@ -22,18 +22,19 @@ public partial class MainWindow : Window
     private Point _lastPointerPosition;
     private readonly Cursor _hiddenCursor = new(StandardCursorType.None);
     private bool _isUpdatingFullscreen;
+    private MainViewModel? _hookedViewModel;
 
     public MainWindow()
     {
         InitializeComponent();
 
-        if (PlayerView.MpvContext != null)
-        {
-            var engine = new CorePlaybackEngine(PlayerView.MpvContext);
-            var playback = new MpvPlaybackService(engine);
-            var storage = new StorageService();
-            DataContext = new MainViewModel(playback, storage);
-        }
+        var engine = new CorePlaybackEngine(PlayerView.MpvContext);
+        var playback = new MpvPlaybackService(engine);
+        var storage = new StorageService();
+        DataContext = new MainViewModel(playback, storage);
+
+        DataContextChanged += (_, _) => HookViewModel(ViewModel);
+        HookViewModel(ViewModel);
 
         PlayerView.ViewInitialized += (s, e) =>
         {
@@ -52,51 +53,69 @@ public partial class MainWindow : Window
         this.GetPropertyChangedObservable(WindowStateProperty).Subscribe(_ =>
         {
             if (_isUpdatingFullscreen) return;
-            if (ViewModel != null)
+            if (ViewModel == null) return;
+
+            bool isFs = WindowState == WindowState.FullScreen;
+            if (ViewModel.IsFullscreen != isFs)
             {
-                bool isFs = WindowState == WindowState.FullScreen;
-                if (ViewModel.IsFullscreen != isFs)
+                // If the window is minimized, retain the fullscreen flag so restoring brings it back to fullscreen
+                if (!isFs && WindowState == WindowState.Minimized)
                 {
-                    _isUpdatingFullscreen = true;
-                    try
-                    {
-                        ViewModel.IsFullscreen = isFs;
-                    }
-                    finally
-                    {
-                        _isUpdatingFullscreen = false;
-                    }
+                    return;
+                }
+
+                _isUpdatingFullscreen = true;
+                try
+                {
+                    ViewModel.IsFullscreen = isFs;
+                }
+                finally
+                {
+                    Dispatcher.UIThread.Post(() => _isUpdatingFullscreen = false, DispatcherPriority.Background);
                 }
             }
         });
-
-        DataContextChanged += OnDataContextChanged;
     }
 
-    private void OnDataContextChanged(object? sender, EventArgs e)
+    private void HookViewModel(MainViewModel? vm)
     {
-        if (ViewModel != null)
+        if (_hookedViewModel == vm) return;
+
+        if (_hookedViewModel != null)
         {
-            ViewModel.PropertyChanged += (s, args) =>
+            _hookedViewModel.PropertyChanged -= OnViewModelPropertyChanged;
+        }
+
+        _hookedViewModel = vm;
+
+        if (_hookedViewModel != null)
+        {
+            _hookedViewModel.PropertyChanged += OnViewModelPropertyChanged;
+            UpdateFullscreenState(_hookedViewModel.IsFullscreen);
+            UpdateCursorVisibility();
+        }
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (ViewModel == null) return;
+
+        if (e.PropertyName == nameof(MainViewModel.IsFullscreen))
+        {
+            UpdateFullscreenState(ViewModel.IsFullscreen);
+        }
+        else if (e.PropertyName == nameof(MainViewModel.IsControlsVisible) || e.PropertyName == nameof(MainViewModel.IsPlaying))
+        {
+            UpdateCursorVisibility();
+        }
+        else if (e.PropertyName == nameof(MainViewModel.IsMiniPlayer))
+        {
+            if (ViewModel.IsMiniPlayer)
             {
-                if (args.PropertyName == nameof(MainViewModel.IsFullscreen))
-                {
-                    UpdateFullscreenState(ViewModel.IsFullscreen);
-                }
-                else if (args.PropertyName == nameof(MainViewModel.IsControlsVisible) || args.PropertyName == nameof(MainViewModel.IsPlaying))
-                {
-                    UpdateCursorVisibility();
-                }
-                else if (args.PropertyName == nameof(MainViewModel.IsMiniPlayer))
-                {
-                    if (ViewModel.IsMiniPlayer)
-                    {
-                        Width = 440;
-                        Height = 250;
-                        WindowState = WindowState.Normal;
-                    }
-                }
-            };
+                Width = 440;
+                Height = 250;
+                WindowState = WindowState.Normal;
+            }
         }
     }
 
@@ -116,12 +135,18 @@ public partial class MainWindow : Window
             }
             else
             {
-                WindowState = _previousWindowState == WindowState.FullScreen ? WindowState.Normal : _previousWindowState;
+                if (WindowState == WindowState.FullScreen)
+                {
+                    WindowState = _previousWindowState == WindowState.FullScreen ? WindowState.Normal : _previousWindowState;
+                }
             }
         }
         finally
         {
-            _isUpdatingFullscreen = false;
+            Dispatcher.UIThread.Post(() =>
+            {
+                _isUpdatingFullscreen = false;
+            }, DispatcherPriority.Background);
         }
     }
 
