@@ -4,7 +4,7 @@
     <Styles.Resources>
         <!-- Liquid Glass Theme Tokens -->
         <Color x:Key="CanvasBgColor">#000000</Color>
-        <Color x:Key="AccentLiquidColor">#8A7FFF</Color>
+        <Color x:Key="AccentLiquidColor">#38BDF8</Color>
 
         <!-- Liquid Glass Silver Gradient Brush (Bright, crisp, metallic shine against black) -->
         <LinearGradientBrush x:Key="LiquidGlassBrush" StartPoint="0%,0%" EndPoint="100%,100%">
@@ -188,8 +188,8 @@
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="#EEEEEE" />
         <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="CornerRadius" Value="6" />
-        <Setter Property="Padding" Value="14,11" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="14,10" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
@@ -203,10 +203,66 @@
         <Setter Property="Background" Value="#1AFFFFFF" />
         <Setter Property="Foreground" Value="#FFFFFF" />
     </Style>
+    <Style Selector="Button.iris-drawer-item:pointerover PathIcon">
+        <Setter Property="Foreground" Value="#FFFFFF" />
+    </Style>
     <Style Selector="Button.iris-drawer-item.active">
-        <Setter Property="Background" Value="#22FFFFFF" />
-        <Setter Property="Foreground" Value="{StaticResource AccentLiquidBrush}" />
+        <Setter Property="Background" Value="#1838BDF8" />
+        <Setter Property="Foreground" Value="#FFFFFF" />
         <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <!-- Drawer Dedicated Back Button (Auto sizing, no 34px fixed limit) -->
+    <Style Selector="Button.iris-drawer-back-btn">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="#CBD5E1" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Padding" Value="6,4" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.1" />
+                <BrushTransition Property="Foreground" Duration="0:0:0.1" />
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button.iris-drawer-back-btn:pointerover">
+        <Setter Property="Background" Value="#20FFFFFF" />
+        <Setter Property="Foreground" Value="#FFFFFF" />
+    </Style>
+    <Style Selector="Button.iris-drawer-back-btn:pointerover PathIcon">
+        <Setter Property="Foreground" Value="#FFFFFF" />
+    </Style>
+    <Style Selector="Button.iris-drawer-back-btn:pointerover TextBlock">
+        <Setter Property="Foreground" Value="#FFFFFF" />
+    </Style>
+
+    <!-- Drawer Dedicated Close Button -->
+    <Style Selector="Button.iris-drawer-close-btn">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="#94A3B8" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Padding" Value="6" />
+        <Setter Property="Height" Value="28" />
+        <Setter Property="Width" Value="28" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.1" />
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button.iris-drawer-close-btn:pointerover">
+        <Setter Property="Background" Value="#25FFFFFF" />
+    </Style>
+    <Style Selector="Button.iris-drawer-close-btn:pointerover PathIcon">
+        <Setter Property="Foreground" Value="#FFFFFF" />
     </Style>
 
     <!-- Liquid Glass Fat 12px Seekbar with Small 7px Ball Thumb - Centered Layout -->

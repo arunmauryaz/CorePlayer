@@ -328,44 +328,39 @@
                 HorizontalAlignment="Right"
                 VerticalAlignment="Stretch"
                 Width="320"
-                Background="#F5101015"
-                BorderBrush="#252530"
+                Background="#F6121316"
+                BorderBrush="#26272E"
                 BorderThickness="1,0,0,0"
-                BoxShadow="-8 0 32 #80000000">
+                BoxShadow="-12 0 40 #95000000">
             <Grid RowDefinitions="Auto, *" Margin="14,38,14,14">
                 <!-- Header (Title / Back / Close) -->
-                <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,12" VerticalAlignment="Center">
-                    <!-- Back Button (shown on sub-pages: Settings, Aspect Ratio, Speed) -->
-                    <Button Grid.Column="0"
-                            Classes="iris-btn"
+                <Grid Grid.Row="0" Margin="4,0,4,14" VerticalAlignment="Center">
+                    <!-- Left: Back Button (shown on sub-pages: Settings, Aspect Ratio, Speed) -->
+                    <Button HorizontalAlignment="Left"
+                            Classes="iris-drawer-back-btn"
                             Command="{Binding NavigateBackCommand}"
                             IsVisible="{Binding IsOptionsSubPage}"
-                            Padding="4,2"
                             ToolTip.Tip="Back to Options">
-                        <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                            <PathIcon Data="{StaticResource ChevronLeftIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" />
-                            <TextBlock Text="Back" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource AccentLiquidBrush}" VerticalAlignment="Center" />
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <PathIcon Data="{StaticResource ChevronLeftIcon}" Width="12" Height="12" Foreground="#CBD5E1" />
+                            <TextBlock Text="Back" FontSize="12" FontWeight="SemiBold" Foreground="#CBD5E1" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
 
-                    <!-- Drawer Title -->
-                    <TextBlock Grid.Column="1"
-                               Text="{Binding OptionsPanelTitle}"
+                    <!-- Center: Drawer Title -->
+                    <TextBlock Text="{Binding OptionsPanelTitle}"
                                FontSize="14"
                                FontWeight="Bold"
                                Foreground="#FFFFFF"
-                               VerticalAlignment="Center"
-                               Margin="6,0,0,0" />
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
 
-                    <!-- Close Drawer Button -->
-                    <Button Grid.Column="2"
-                            Classes="iris-btn"
+                    <!-- Right: Close Drawer Button -->
+                    <Button HorizontalAlignment="Right"
+                            Classes="iris-drawer-close-btn"
                             Command="{Binding CloseMoreMenuCommand}"
-                            Padding="4"
-                            Height="24"
-                            Width="24"
-                            ToolTip.Tip="Close Options">
-                        <PathIcon Data="{StaticResource CloseIcon}" Width="10" Height="10" Foreground="#AAAAAA" />
+                            ToolTip.Tip="Close Options (Esc)">
+                        <PathIcon Data="{StaticResource CloseIcon}" Width="11" Height="11" Foreground="#94A3B8" />
                     </Button>
                 </Grid>
 
@@ -377,142 +372,142 @@
                             <!-- Open File -->
                             <Button Classes="iris-drawer-item" Click="OnOpenFileClick">
                                 <Grid ColumnDefinitions="Auto, *, Auto">
-                                    <PathIcon Grid.Column="0" Data="{StaticResource FolderIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="0" Data="{StaticResource FolderIcon}" Width="16" Height="16" Foreground="#CBD5E1" Margin="0,0,12,0" VerticalAlignment="Center" />
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Open File..." FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
-                                        <TextBlock Text="Choose media to play" FontSize="11" Foreground="#888888" />
+                                        <TextBlock Text="Choose media to play" FontSize="11" Foreground="#94A3B8" />
                                     </StackPanel>
-                                    <TextBlock Grid.Column="2" Text="Ctrl+O" FontSize="11" Foreground="#666666" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="2" Text="Ctrl+O" FontSize="11" Foreground="#64748B" VerticalAlignment="Center" />
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- Open Folder -->
                             <Button Classes="iris-drawer-item" Click="OnOpenFolderClick">
                                 <Grid ColumnDefinitions="Auto, *, Auto">
-                                    <PathIcon Grid.Column="0" Data="{StaticResource FolderIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="0" Data="{StaticResource FolderIcon}" Width="16" Height="16" Foreground="#CBD5E1" Margin="0,0,12,0" VerticalAlignment="Center" />
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Open Folder..." FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
-                                        <TextBlock Text="Play all media in folder" FontSize="11" Foreground="#888888" />
+                                        <TextBlock Text="Play all media in folder" FontSize="11" Foreground="#94A3B8" />
                                     </StackPanel>
-                                    <TextBlock Grid.Column="2" Text="Ctrl+F" FontSize="11" Foreground="#666666" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="2" Text="Ctrl+F" FontSize="11" Foreground="#64748B" VerticalAlignment="Center" />
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- Open URL / Stream -->
                             <Button Classes="iris-drawer-item" Click="OnOpenUrlClick">
                                 <Grid ColumnDefinitions="Auto, *, Auto">
-                                    <PathIcon Grid.Column="0" Data="{StaticResource IrisBadgeIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="0" Data="{StaticResource IrisBadgeIcon}" Width="16" Height="16" Foreground="#CBD5E1" Margin="0,0,12,0" VerticalAlignment="Center" />
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Open URL / Stream..." FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
-                                        <TextBlock Text="Direct network stream" FontSize="11" Foreground="#888888" />
+                                        <TextBlock Text="Direct network stream" FontSize="11" Foreground="#94A3B8" />
                                     </StackPanel>
-                                    <TextBlock Grid.Column="2" Text="Ctrl+U" FontSize="11" Foreground="#666666" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="2" Text="Ctrl+U" FontSize="11" Foreground="#64748B" VerticalAlignment="Center" />
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- Take Snapshot -->
                             <Button Classes="iris-drawer-item" Command="{Binding TakeSnapshotCommand}">
                                 <Grid ColumnDefinitions="Auto, *, Auto">
-                                    <PathIcon Grid.Column="0" Data="{StaticResource CameraIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="0" Data="{StaticResource CameraIcon}" Width="16" Height="16" Foreground="#CBD5E1" Margin="0,0,12,0" VerticalAlignment="Center" />
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Take Snapshot" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
-                                        <TextBlock Text="Save frame to Pictures" FontSize="11" Foreground="#888888" />
+                                        <TextBlock Text="Save frame to Pictures" FontSize="11" Foreground="#94A3B8" />
                                     </StackPanel>
-                                    <TextBlock Grid.Column="2" Text="Ctrl+S" FontSize="11" Foreground="#666666" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="2" Text="Ctrl+S" FontSize="11" Foreground="#64748B" VerticalAlignment="Center" />
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- Aspect Ratio (Navigates to sub-page) -->
                             <Button Classes="iris-drawer-item" Command="{Binding NavigateToOptionsPageCommand}" CommandParameter="2">
                                 <Grid ColumnDefinitions="Auto, *, Auto">
-                                    <PathIcon Grid.Column="0" Data="{StaticResource AspectRatioIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="0" Data="{StaticResource AspectRatioIcon}" Width="16" Height="16" Foreground="#CBD5E1" Margin="0,0,12,0" VerticalAlignment="Center" />
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Aspect Ratio" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
-                                        <TextBlock Text="Fit, 16:9, 4:3, 2.35:1" FontSize="11" Foreground="#888888" />
+                                        <TextBlock Text="Fit, 16:9, 4:3, 2.35:1" FontSize="11" Foreground="#94A3B8" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding AspectRatioName}" FontSize="12" Foreground="{StaticResource AccentLiquidBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                        <PathIcon Data="{StaticResource ChevronRightIcon}" Width="10" Height="10" Foreground="#888888" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding AspectRatioName}" FontSize="12" Foreground="#CBD5E1" FontWeight="Medium" VerticalAlignment="Center" />
+                                        <PathIcon Data="{StaticResource ChevronRightIcon}" Width="10" Height="10" Foreground="#64748B" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- Playback Speed (Navigates to sub-page) -->
                             <Button Classes="iris-drawer-item" Command="{Binding NavigateToOptionsPageCommand}" CommandParameter="3">
                                 <Grid ColumnDefinitions="Auto, *, Auto">
-                                    <PathIcon Grid.Column="0" Data="{StaticResource StepForwardIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="0" Data="{StaticResource StepForwardIcon}" Width="16" Height="16" Foreground="#CBD5E1" Margin="0,0,12,0" VerticalAlignment="Center" />
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Playback Speed" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
-                                        <TextBlock Text="Slow motion or fast playback" FontSize="11" Foreground="#888888" />
+                                        <TextBlock Text="Slow motion or fast playback" FontSize="11" Foreground="#94A3B8" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding SpeedDisplayUpper}" FontSize="12" Foreground="{StaticResource AccentLiquidBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                        <PathIcon Data="{StaticResource ChevronRightIcon}" Width="10" Height="10" Foreground="#888888" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding SpeedDisplayUpper}" FontSize="12" Foreground="#CBD5E1" FontWeight="Medium" VerticalAlignment="Center" />
+                                        <PathIcon Data="{StaticResource ChevronRightIcon}" Width="10" Height="10" Foreground="#64748B" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- Rotate Video -->
                             <Button Classes="iris-drawer-item" Command="{Binding CycleRotationCommand}">
                                 <Grid ColumnDefinitions="Auto, *, Auto">
-                                    <PathIcon Grid.Column="0" Data="{StaticResource RotateIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="0" Data="{StaticResource RotateIcon}" Width="16" Height="16" Foreground="#CBD5E1" Margin="0,0,12,0" VerticalAlignment="Center" />
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Rotate Video" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
-                                        <TextBlock Text="Click to cycle orientation" FontSize="11" Foreground="#888888" />
+                                        <TextBlock Text="Click to cycle orientation" FontSize="11" Foreground="#94A3B8" />
                                     </StackPanel>
-                                    <TextBlock Grid.Column="2" Text="{Binding RotationName}" FontSize="12" Foreground="{StaticResource AccentLiquidBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="2" Text="{Binding RotationName}" FontSize="12" Foreground="#CBD5E1" FontWeight="Medium" VerticalAlignment="Center" />
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- Subtitles & Audio Tracks -->
                             <Button Classes="iris-drawer-item" Command="{Binding OpenTracksFromOptionsCommand}">
                                 <Grid ColumnDefinitions="Auto, *, Auto">
-                                    <PathIcon Grid.Column="0" Data="{StaticResource CcIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="0" Data="{StaticResource CcIcon}" Width="16" Height="16" Foreground="#CBD5E1" Margin="0,0,12,0" VerticalAlignment="Center" />
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Tracks &amp; Delay" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
-                                        <TextBlock Text="Audio dubs and subtitles" FontSize="11" Foreground="#888888" />
+                                        <TextBlock Text="Audio dubs and subtitles" FontSize="11" Foreground="#94A3B8" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                        <TextBlock Text="C" FontSize="11" Foreground="#666666" VerticalAlignment="Center" />
-                                        <PathIcon Data="{StaticResource ChevronRightIcon}" Width="10" Height="10" Foreground="#888888" VerticalAlignment="Center" />
+                                        <TextBlock Text="C" FontSize="11" Foreground="#64748B" VerticalAlignment="Center" />
+                                        <PathIcon Data="{StaticResource ChevronRightIcon}" Width="10" Height="10" Foreground="#64748B" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- Playlist Queue -->
                             <Button Classes="iris-drawer-item" Command="{Binding OpenQueueFromOptionsCommand}">
                                 <Grid ColumnDefinitions="Auto, *, Auto">
-                                    <PathIcon Grid.Column="0" Data="{StaticResource PlaylistIrisIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="0" Data="{StaticResource PlaylistIrisIcon}" Width="16" Height="16" Foreground="#CBD5E1" Margin="0,0,12,0" VerticalAlignment="Center" />
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Playlist Queue" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
-                                        <TextBlock Text="View or manage queue" FontSize="11" Foreground="#888888" />
+                                        <TextBlock Text="View or manage queue" FontSize="11" Foreground="#94A3B8" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Playlist.Count, StringFormat='{}{0} files'}" FontSize="11" Foreground="#888888" VerticalAlignment="Center" />
-                                        <PathIcon Data="{StaticResource ChevronRightIcon}" Width="10" Height="10" Foreground="#888888" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Playlist.Count, StringFormat='{}{0} files'}" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Center" />
+                                        <PathIcon Data="{StaticResource ChevronRightIcon}" Width="10" Height="10" Foreground="#64748B" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- Technical Specs Box -->
-                            <Border Background="#10FFFFFF" CornerRadius="6" Padding="12,10" Margin="0,6,0,6">
+                            <Border Background="#0CFFFFFF" CornerRadius="8" Padding="12,10" Margin="0,6,0,6">
                                 <StackPanel Spacing="3">
-                                    <TextBlock Text="MEDIA SPECIFICATIONS" FontSize="10" FontWeight="Bold" Foreground="#777780" />
-                                    <TextBlock Text="{Binding Resolution, StringFormat='Resolution: {0}'}" FontSize="11" Foreground="#AAAAAA" />
-                                    <TextBlock Text="{Binding VideoCodec, StringFormat='Video Codec: {0}'}" FontSize="11" Foreground="#AAAAAA" />
-                                    <TextBlock Text="{Binding AudioCodec, StringFormat='Audio Codec: {0}'}" FontSize="11" Foreground="#AAAAAA" />
+                                    <TextBlock Text="MEDIA SPECIFICATIONS" FontSize="10" FontWeight="Bold" Foreground="#64748B" />
+                                    <TextBlock Text="{Binding Resolution, StringFormat='Resolution: {0}'}" FontSize="11" Foreground="#CBD5E1" />
+                                    <TextBlock Text="{Binding VideoCodec, StringFormat='Video Codec: {0}'}" FontSize="11" Foreground="#CBD5E1" />
+                                    <TextBlock Text="{Binding AudioCodec, StringFormat='Audio Codec: {0}'}" FontSize="11" Foreground="#CBD5E1" />
                                 </StackPanel>
                             </Border>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- SETTINGS (At last, prominent with subtitle & chevron) -->
                             <Button Classes="iris-drawer-item"
@@ -521,12 +516,12 @@
                                     Background="#14FFFFFF"
                                     Margin="0,4,0,0">
                                 <Grid ColumnDefinitions="Auto, *, Auto">
-                                    <PathIcon Grid.Column="0" Data="{StaticResource SettingsGearIcon}" Width="18" Height="18" Foreground="#FFFFFF" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="0" Data="{StaticResource SettingsGearIcon}" Width="18" Height="18" Foreground="#CBD5E1" Margin="0,0,12,0" VerticalAlignment="Center" />
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Settings" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF" />
-                                        <TextBlock Text="Preferences, Audio &amp; Video Options" FontSize="11" Foreground="#AAAAAA" />
+                                        <TextBlock Text="Preferences, Audio &amp; Video Options" FontSize="11" Foreground="#94A3B8" />
                                     </StackPanel>
-                                    <PathIcon Grid.Column="2" Data="{StaticResource ChevronRightIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="2" Data="{StaticResource ChevronRightIcon}" Width="12" Height="12" Foreground="#CBD5E1" VerticalAlignment="Center" />
                                 </Grid>
                             </Button>
                         </StackPanel>
@@ -536,98 +531,98 @@
                             <!-- Night Mode Normalizer -->
                             <Button Classes="iris-drawer-item" Command="{Binding ToggleNightModeCommand}">
                                 <Grid ColumnDefinitions="Auto, *, Auto">
-                                    <PathIcon Grid.Column="0" Data="{StaticResource MoonIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="0" Data="{StaticResource MoonIcon}" Width="16" Height="16" Foreground="#CBD5E1" Margin="0,0,12,0" VerticalAlignment="Center" />
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Night Mode (Normalizer)" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
-                                        <TextBlock Text="Compress loud audio peaks" FontSize="11" Foreground="#888888" />
+                                        <TextBlock Text="Compress loud audio peaks" FontSize="11" Foreground="#94A3B8" />
                                     </StackPanel>
-                                    <Border Grid.Column="2" CornerRadius="4" Padding="8,3" Background="#20FFFFFF" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding NightModeStatusText}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentLiquidBrush}" />
+                                    <Border Grid.Column="2" CornerRadius="4" Padding="8,3" Background="#1838BDF8" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding NightModeStatusText}" FontSize="11" FontWeight="SemiBold" Foreground="#38BDF8" />
                                     </Border>
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- Always On Top -->
                             <Button Classes="iris-drawer-item" Command="{Binding ToggleAlwaysOnTopCommand}">
                                 <Grid ColumnDefinitions="Auto, *, Auto">
-                                    <PathIcon Grid.Column="0" Data="{StaticResource PinIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="0" Data="{StaticResource PinIcon}" Width="16" Height="16" Foreground="#CBD5E1" Margin="0,0,12,0" VerticalAlignment="Center" />
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Always on Top (Pin)" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
-                                        <TextBlock Text="Keep window above other apps" FontSize="11" Foreground="#888888" />
+                                        <TextBlock Text="Keep window above other apps" FontSize="11" Foreground="#94A3B8" />
                                     </StackPanel>
-                                    <Border Grid.Column="2" CornerRadius="4" Padding="8,3" Background="#20FFFFFF" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding AlwaysOnTopStatusText}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentLiquidBrush}" />
+                                    <Border Grid.Column="2" CornerRadius="4" Padding="8,3" Background="#1838BDF8" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding AlwaysOnTopStatusText}" FontSize="11" FontWeight="SemiBold" Foreground="#38BDF8" />
                                     </Border>
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- Hardware Video Acceleration -->
-                            <Border Classes="iris-drawer-item" Padding="14,11">
+                            <Border Classes="iris-drawer-item" Padding="14,10">
                                 <Grid ColumnDefinitions="Auto, *, Auto">
-                                    <PathIcon Grid.Column="0" Data="{StaticResource IrisBadgeIcon}" Width="16" Height="16" Foreground="#4CAF50" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="0" Data="{StaticResource IrisBadgeIcon}" Width="16" Height="16" Foreground="#4EC9B0" Margin="0,0,12,0" VerticalAlignment="Center" />
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Hardware Decoding" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
-                                        <TextBlock Text="GPU Native Pipeline (OpenGL / WGL)" FontSize="11" Foreground="#888888" />
+                                        <TextBlock Text="GPU Native Pipeline (OpenGL / WGL)" FontSize="11" Foreground="#94A3B8" />
                                     </StackPanel>
-                                    <Border Grid.Column="2" CornerRadius="4" Padding="8,3" Background="#204CAF50" VerticalAlignment="Center">
-                                        <TextBlock Text="Active" FontSize="11" FontWeight="Bold" Foreground="#4CAF50" />
+                                    <Border Grid.Column="2" CornerRadius="4" Padding="8,3" Background="#184EC9B0" VerticalAlignment="Center">
+                                        <TextBlock Text="Active" FontSize="11" FontWeight="SemiBold" Foreground="#4EC9B0" />
                                     </Border>
                                 </Grid>
                             </Border>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- Repeat Playback Mode -->
                             <Button Classes="iris-drawer-item" Command="{Binding ToggleRepeatCommand}">
                                 <Grid ColumnDefinitions="Auto, *, Auto">
-                                    <PathIcon Grid.Column="0" Data="{StaticResource RepeatIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="0" Data="{StaticResource RepeatIcon}" Width="16" Height="16" Foreground="#CBD5E1" Margin="0,0,12,0" VerticalAlignment="Center" />
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Repeat Mode" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
-                                        <TextBlock Text="Click to toggle Off, All, One" FontSize="11" Foreground="#888888" />
+                                        <TextBlock Text="Click to toggle Off, All, One" FontSize="11" Foreground="#94A3B8" />
                                     </StackPanel>
-                                    <TextBlock Grid.Column="2" Text="{Binding RepeatModeName}" FontSize="12" Foreground="{StaticResource AccentLiquidBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="2" Text="{Binding RepeatModeName}" FontSize="12" Foreground="#CBD5E1" FontWeight="Medium" VerticalAlignment="Center" />
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- Shuffle Mode -->
                             <Button Classes="iris-drawer-item" Command="{Binding ToggleShuffleCommand}">
                                 <Grid ColumnDefinitions="Auto, *, Auto">
-                                    <PathIcon Grid.Column="0" Data="{StaticResource ShuffleIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="0" Data="{StaticResource ShuffleIcon}" Width="16" Height="16" Foreground="#CBD5E1" Margin="0,0,12,0" VerticalAlignment="Center" />
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Shuffle Playlist" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
-                                        <TextBlock Text="Randomize track order" FontSize="11" Foreground="#888888" />
+                                        <TextBlock Text="Randomize track order" FontSize="11" Foreground="#94A3B8" />
                                     </StackPanel>
-                                    <Border Grid.Column="2" CornerRadius="4" Padding="8,3" Background="#20FFFFFF" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding ShuffleStatusText}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentLiquidBrush}" />
+                                    <Border Grid.Column="2" CornerRadius="4" Padding="8,3" Background="#1838BDF8" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding ShuffleStatusText}" FontSize="11" FontWeight="SemiBold" Foreground="#38BDF8" />
                                     </Border>
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- Preferences -->
                             <Button Classes="iris-drawer-item" Command="{Binding OpenPreferencesCommand}">
                                 <Grid ColumnDefinitions="Auto, *, Auto">
-                                    <PathIcon Grid.Column="0" Data="{StaticResource SettingsGearIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="0" Data="{StaticResource SettingsGearIcon}" Width="16" Height="16" Foreground="#CBD5E1" Margin="0,0,12,0" VerticalAlignment="Center" />
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="Advanced Preferences..." FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
-                                        <TextBlock Text="Audio/video renderer configuration" FontSize="11" Foreground="#888888" />
+                                        <TextBlock Text="Audio/video renderer configuration" FontSize="11" Foreground="#94A3B8" />
                                     </StackPanel>
-                                    <PathIcon Grid.Column="2" Data="{StaticResource ChevronRightIcon}" Width="10" Height="10" Foreground="#888888" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="2" Data="{StaticResource ChevronRightIcon}" Width="10" Height="10" Foreground="#64748B" VerticalAlignment="Center" />
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- About CORE PLAYER -->
                             <Button Classes="iris-drawer-item" Click="OnAboutClick">
                                 <Grid ColumnDefinitions="Auto, *, Auto">
-                                    <PathIcon Grid.Column="0" Data="{StaticResource IrisBadgeIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="0" Data="{StaticResource IrisBadgeIcon}" Width="16" Height="16" Foreground="#CBD5E1" Margin="0,0,12,0" VerticalAlignment="Center" />
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="About CORE PLAYER" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
-                                        <TextBlock Text="v1.0 • Liquid Glass Edition" FontSize="11" Foreground="#888888" />
+                                        <TextBlock Text="v1.0 • Liquid Glass Edition" FontSize="11" Foreground="#94A3B8" />
                                     </StackPanel>
-                                    <PathIcon Grid.Column="2" Data="{StaticResource ChevronRightIcon}" Width="10" Height="10" Foreground="#888888" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="2" Data="{StaticResource ChevronRightIcon}" Width="10" Height="10" Foreground="#64748B" VerticalAlignment="Center" />
                                 </Grid>
                             </Button>
                         </StackPanel>
@@ -638,43 +633,43 @@
                             <Button Classes="iris-drawer-item" Command="{Binding SetAspectRatioCommand}" CommandParameter="-1">
                                 <Grid ColumnDefinitions="*, Auto">
                                     <TextBlock Grid.Column="0" Text="Fit to Window (Default)" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
-                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsAspectFit}" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="#38BDF8" IsVisible="{Binding IsAspectFit}" />
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- 16:9 Widescreen -->
                             <Button Classes="iris-drawer-item" Command="{Binding SetAspectRatioCommand}" CommandParameter="16:9">
                                 <Grid ColumnDefinitions="*, Auto">
                                     <TextBlock Grid.Column="0" Text="16:9 Widescreen" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
-                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsAspect169}" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="#38BDF8" IsVisible="{Binding IsAspect169}" />
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- 4:3 Standard -->
                             <Button Classes="iris-drawer-item" Command="{Binding SetAspectRatioCommand}" CommandParameter="4:3">
                                 <Grid ColumnDefinitions="*, Auto">
                                     <TextBlock Grid.Column="0" Text="4:3 Standard TV" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
-                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsAspect43}" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="#38BDF8" IsVisible="{Binding IsAspect43}" />
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- 2.35:1 Cinematic -->
                             <Button Classes="iris-drawer-item" Command="{Binding SetAspectRatioCommand}" CommandParameter="2.35:1">
                                 <Grid ColumnDefinitions="*, Auto">
                                     <TextBlock Grid.Column="0" Text="2.35:1 Anamorphic Cinematic" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
-                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsAspect235}" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="#38BDF8" IsVisible="{Binding IsAspect235}" />
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- 21:9 Ultra-Wide -->
                             <Button Classes="iris-drawer-item" Command="{Binding SetAspectRatioCommand}" CommandParameter="21:9">
                                 <Grid ColumnDefinitions="*, Auto">
                                     <TextBlock Grid.Column="0" Text="21:9 Ultra-Wide" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
-                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsAspect219}" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="#38BDF8" IsVisible="{Binding IsAspect219}" />
                                 </Grid>
                             </Button>
                         </StackPanel>
@@ -685,61 +680,61 @@
                             <Button Classes="iris-drawer-item" Command="{Binding SetSpeedCommand}" CommandParameter="0.5">
                                 <Grid ColumnDefinitions="*, Auto">
                                     <TextBlock Grid.Column="0" Text="0.5x (Slow Motion)" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
-                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsSpeed05}" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="#38BDF8" IsVisible="{Binding IsSpeed05}" />
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- 0.75x -->
                             <Button Classes="iris-drawer-item" Command="{Binding SetSpeedCommand}" CommandParameter="0.75">
                                 <Grid ColumnDefinitions="*, Auto">
                                     <TextBlock Grid.Column="0" Text="0.75x" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
-                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsSpeed075}" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="#38BDF8" IsVisible="{Binding IsSpeed075}" />
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- 1.0x (Normal) -->
                             <Button Classes="iris-drawer-item" Command="{Binding SetSpeedCommand}" CommandParameter="1.0">
                                 <Grid ColumnDefinitions="*, Auto">
                                     <TextBlock Grid.Column="0" Text="1.0x (Normal Speed)" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
-                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsSpeed10}" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="#38BDF8" IsVisible="{Binding IsSpeed10}" />
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- 1.25x -->
                             <Button Classes="iris-drawer-item" Command="{Binding SetSpeedCommand}" CommandParameter="1.25">
                                 <Grid ColumnDefinitions="*, Auto">
                                     <TextBlock Grid.Column="0" Text="1.25x" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
-                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsSpeed125}" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="#38BDF8" IsVisible="{Binding IsSpeed125}" />
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- 1.5x -->
                             <Button Classes="iris-drawer-item" Command="{Binding SetSpeedCommand}" CommandParameter="1.5">
                                 <Grid ColumnDefinitions="*, Auto">
                                     <TextBlock Grid.Column="0" Text="1.5x" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
-                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsSpeed15}" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="#38BDF8" IsVisible="{Binding IsSpeed15}" />
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- 1.75x -->
                             <Button Classes="iris-drawer-item" Command="{Binding SetSpeedCommand}" CommandParameter="1.75">
                                 <Grid ColumnDefinitions="*, Auto">
                                     <TextBlock Grid.Column="0" Text="1.75x" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
-                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsSpeed175}" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="#38BDF8" IsVisible="{Binding IsSpeed175}" />
                                 </Grid>
                             </Button>
-                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
                             <!-- 2.0x -->
                             <Button Classes="iris-drawer-item" Command="{Binding SetSpeedCommand}" CommandParameter="2.0">
                                 <Grid ColumnDefinitions="*, Auto">
                                     <TextBlock Grid.Column="0" Text="2.0x (Double Speed)" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
-                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsSpeed20}" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="#38BDF8" IsVisible="{Binding IsSpeed20}" />
                                 </Grid>
                             </Button>
                         </StackPanel>
