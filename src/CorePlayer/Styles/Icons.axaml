@@ -95,4 +95,14 @@
 
     <!-- Checkmark Icon -->
     <StreamGeometry x:Key="CheckIcon">M 4,12 L 9,17 L 20,6</StreamGeometry>
+
+    <!-- Navigation Chevrons -->
+    <StreamGeometry x:Key="ChevronRightIcon">M 10,6 L 8.59,7.41 L 13.17,12 L 8.59,16.59 L 10,18 L 16,12 Z</StreamGeometry>
+    <StreamGeometry x:Key="ChevronLeftIcon">M 15.41,7.41 L 14,6 L 8,12 L 14,18 L 15.41,16.59 L 10.83,12 Z</StreamGeometry>
+
+    <!-- Video Rotation Icon -->
+    <StreamGeometry x:Key="RotateIcon">M 12,5 V 1 L 7,6 L 12,11 V 7 C 15.31,7 18,9.69 18,13 C 18,16.31 15.31,19 12,19 C 8.69,19 6,16.31 6,13 H 4 C 4,17.42 7.58,21 12,21 C 16.42,21 20,17.42 20,13 C 20,8.58 16.42,5 12,5 Z</StreamGeometry>
+
+    <!-- Moon (Night Mode) Icon -->
+    <StreamGeometry x:Key="MoonIcon">M 12.3,2 A 10,10 0 0 0 22,13.7 A 10,10 0 1 1 12.3,2 Z</StreamGeometry>
 </ResourceDictionary>

@@ -120,98 +120,33 @@
                        Foreground="#EEEEEE" />
         </Border>
 
-        <!-- ================= LAYER 2: SLIM TOP BAR WITH VLC-STYLE GLASS MENUS & CONTROLS ================= -->
+        <!-- ================= LAYER 2: SLIM CLEAN TOP BAR WITH TITLE & CONTROLS ================= -->
         <Border x:Name="TopBarBorder"
                 VerticalAlignment="Top"
                 Height="36"
                 Background="Transparent"
-                Padding="12,0,0,0"
+                Padding="14,0,0,0"
                 Margin="0,0,6,0"
                 PointerPressed="OnTopBarPointerPressed"
                 IsVisible="{Binding IsControlsVisible}">
-            <Grid ColumnDefinitions="Auto, *, Auto" VerticalAlignment="Center">
-                <!-- 1. Glassmorphic VLC-style Top Menu (No Logo or Brand Name) -->
-                <Menu Grid.Column="0" Classes="iris-top-menu" VerticalAlignment="Center">
-                    <!-- File -->
-                    <MenuItem Header="_File">
-                        <MenuItem Header="Open File..." Click="OnOpenFileClick" InputGesture="Ctrl+O" />
-                        <MenuItem Header="Open Folder..." Click="OnOpenFolderClick" InputGesture="Ctrl+F" />
-                        <MenuItem Header="Open URL / Stream..." Click="OnOpenUrlClick" InputGesture="Ctrl+U" />
-                        <Separator />
-                        <MenuItem Header="Exit" Click="OnCloseClick" InputGesture="Alt+F4" />
-                    </MenuItem>
-
-                    <!-- Playback -->
-                    <MenuItem Header="_Playback">
-                        <MenuItem Header="Play / Pause" Command="{Binding TogglePlayPauseCommand}" InputGesture="Space" />
-                        <MenuItem Header="Stop" Command="{Binding StopCommand}" />
-                        <Separator />
-                        <MenuItem Header="Next File" Command="{Binding PlayNextTrackCommand}" InputGesture="Shift+N" />
-                        <MenuItem Header="Previous File" Command="{Binding PlayPreviousTrackCommand}" InputGesture="Shift+P" />
-                        <MenuItem Header="Forward 5s" Command="{Binding SeekForward5Command}" InputGesture="Right" />
-                        <MenuItem Header="Rewind 5s" Command="{Binding SeekBackward5Command}" InputGesture="Left" />
-                        <Separator />
-                        <MenuItem Header="Speed">
-                            <MenuItem Header="0.5x" Command="{Binding SetSpeedCommand}" CommandParameter="0.5" />
-                            <MenuItem Header="0.75x" Command="{Binding SetSpeedCommand}" CommandParameter="0.75" />
-                            <MenuItem Header="1.0x (Normal)" Command="{Binding SetSpeedCommand}" CommandParameter="1.0" />
-                            <MenuItem Header="1.25x" Command="{Binding SetSpeedCommand}" CommandParameter="1.25" />
-                            <MenuItem Header="1.5x" Command="{Binding SetSpeedCommand}" CommandParameter="1.5" />
-                            <MenuItem Header="2.0x" Command="{Binding SetSpeedCommand}" CommandParameter="2.0" />
-                        </MenuItem>
-                        <MenuItem Header="Repeat Mode" Command="{Binding ToggleRepeatCommand}" />
-                        <MenuItem Header="Shuffle" Command="{Binding ToggleShuffleCommand}" />
-                    </MenuItem>
-
-                    <!-- View -->
-                    <MenuItem Header="_View">
-                        <MenuItem Header="Fullscreen" Command="{Binding ToggleFullscreenCommand}" InputGesture="F" />
-                        <MenuItem Header="Always on Top (Pin)" Command="{Binding ToggleAlwaysOnTopCommand}" />
-                        <MenuItem Header="Playlist Queue" Command="{Binding ToggleQueueCommand}" />
-                        <Separator />
-                        <MenuItem Header="Aspect Ratio">
-                            <MenuItem Header="Fit to Window" Command="{Binding SetAspectRatioCommand}" CommandParameter="-1" />
-                            <MenuItem Header="16:9 Widescreen" Command="{Binding SetAspectRatioCommand}" CommandParameter="16:9" />
-                            <MenuItem Header="4:3 Standard" Command="{Binding SetAspectRatioCommand}" CommandParameter="4:3" />
-                            <MenuItem Header="2.35:1 Cinematic" Command="{Binding SetAspectRatioCommand}" CommandParameter="2.35:1" />
-                        </MenuItem>
-                        <MenuItem Header="Rotate Video">
-                            <MenuItem Header="0° (Normal)" Command="{Binding RotateVideoCommand}" CommandParameter="0" />
-                            <MenuItem Header="90° Clockwise" Command="{Binding RotateVideoCommand}" CommandParameter="90" />
-                            <MenuItem Header="180° Inverted" Command="{Binding RotateVideoCommand}" CommandParameter="180" />
-                            <MenuItem Header="270° Counter-Clockwise" Command="{Binding RotateVideoCommand}" CommandParameter="270" />
-                        </MenuItem>
-                        <MenuItem Header="Technical Info" Command="{Binding ToggleInfoModalCommand}" InputGesture="Ctrl+I" />
-                        <MenuItem Header="Take Snapshot" Command="{Binding TakeSnapshotCommand}" InputGesture="Ctrl+S" />
-                    </MenuItem>
-
-                    <!-- Settings -->
-                    <MenuItem Header="_Settings">
-                        <MenuItem Header="Preferences..." Command="{Binding OpenPreferencesCommand}" />
-                        <MenuItem Header="Advanced Settings..." Command="{Binding OpenAdvancedSettingsCommand}" />
-                        <Separator />
-                        <MenuItem Header="About Player" Click="OnAboutClick" />
-                    </MenuItem>
-                </Menu>
-
-                <!-- 2. Responsive currently playing file indicator (character ellipsis right before pin icon) -->
-                <Grid Grid.Column="1"
+            <Grid ColumnDefinitions="*, Auto" VerticalAlignment="Center">
+                <!-- 1. Currently playing file indicator (character ellipsis before window buttons) -->
+                <Grid Grid.Column="0"
                       ColumnDefinitions="Auto, *"
                       VerticalAlignment="Center"
-                      Margin="14,0,14,0"
-                      IsVisible="{Binding HasMedia}">
-                    <Border Grid.Column="0" Width="1" Height="14" Background="#33FFFFFF" VerticalAlignment="Center" Margin="0,0,10,0" />
+                      Margin="0,0,16,0">
                     <TextBlock Grid.Column="1"
                                Text="{Binding HeaderTitleText}"
-                               FontSize="11"
-                               Foreground="#AAAAAA"
+                               FontSize="12"
+                               FontWeight="Medium"
+                               Foreground="#CCCCCC"
                                VerticalAlignment="Center"
                                TextTrimming="CharacterEllipsis"
                                ToolTip.Tip="{Binding HeaderTitleText}" />
                 </Grid>
 
-                <!-- 3. Top-Right Window Controls (Pin, Minimize, Maximize/Restore, Close) - Fixed permanently across all modes -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center" Margin="0,0,4,0">
+                <!-- 2. Top-Right Window Controls (Pin, Minimize, Maximize/Restore, Close) - Fixed permanently across all modes -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center" Margin="0,0,4,0">
                     <!-- Pin (Always On Top) Icon Button with Tilt / Straight state -->
                     <Button Classes="iris-pin-btn"
                             Classes.pinned="{Binding IsAlwaysOnTop}"
@@ -388,77 +323,429 @@
             </Grid>
         </Border>
 
-        <!-- ================= LAYER 4: MORE OPTIONS POPOVER (⋮) ================= -->
+        <!-- ================= LAYER 4: MODERN OPTIONS SIDE PANEL DRAWER (SWIPES FROM RIGHT) ================= -->
         <Border IsVisible="{Binding IsMoreMenuOpen}"
                 HorizontalAlignment="Right"
-                VerticalAlignment="Bottom"
-                Margin="0,0,10,44"
-                Width="220"
-                Background="#F0141416"
-                BorderBrush="#2A2A2E"
-                BorderThickness="1"
-                CornerRadius="6"
-                Padding="6"
-                BoxShadow="0 8 24 #80000000">
-            <StackPanel Spacing="3">
-                <Grid ColumnDefinitions="*, Auto" Margin="6,2,6,4">
-                    <TextBlock Grid.Column="0" Text="Options" FontSize="11" FontWeight="SemiBold" Foreground="#888890" />
-                    <Button Grid.Column="1" Classes="iris-btn" Command="{Binding ToggleMoreMenuCommand}" Padding="2" Height="18" Width="18">
-                        <PathIcon Data="{StaticResource CloseIcon}" Width="8" Height="8" Foreground="#888888" />
+                VerticalAlignment="Stretch"
+                Width="320"
+                Background="#F5101015"
+                BorderBrush="#252530"
+                BorderThickness="1,0,0,0"
+                BoxShadow="-8 0 32 #80000000">
+            <Grid RowDefinitions="Auto, *" Margin="14,38,14,14">
+                <!-- Header (Title / Back / Close) -->
+                <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,12" VerticalAlignment="Center">
+                    <!-- Back Button (shown on sub-pages: Settings, Aspect Ratio, Speed) -->
+                    <Button Grid.Column="0"
+                            Classes="iris-btn"
+                            Command="{Binding NavigateBackCommand}"
+                            IsVisible="{Binding IsOptionsSubPage}"
+                            Padding="4,2"
+                            ToolTip.Tip="Back to Options">
+                        <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                            <PathIcon Data="{StaticResource ChevronLeftIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" />
+                            <TextBlock Text="Back" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource AccentLiquidBrush}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Drawer Title -->
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding OptionsPanelTitle}"
+                               FontSize="14"
+                               FontWeight="Bold"
+                               Foreground="#FFFFFF"
+                               VerticalAlignment="Center"
+                               Margin="6,0,0,0" />
+
+                    <!-- Close Drawer Button -->
+                    <Button Grid.Column="2"
+                            Classes="iris-btn"
+                            Command="{Binding CloseMoreMenuCommand}"
+                            Padding="4"
+                            Height="24"
+                            Width="24"
+                            ToolTip.Tip="Close Options">
+                        <PathIcon Data="{StaticResource CloseIcon}" Width="10" Height="10" Foreground="#AAAAAA" />
                     </Button>
                 </Grid>
 
-                <!-- Take Snapshot -->
-                <Button Classes="iris-menu-item" Command="{Binding TakeSnapshotCommand}">
-                    <Grid ColumnDefinitions="Auto, *, Auto">
-                        <PathIcon Grid.Column="0" Data="{StaticResource CameraIcon}" Width="13" Height="13" Classes="liquid-icon" Margin="0,0,8,0" />
-                        <TextBlock Grid.Column="1" Text="Take Snapshot" FontSize="11" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" Text="Ctrl+S" FontSize="10" Foreground="#666666" VerticalAlignment="Center" />
-                    </Grid>
-                </Button>
+                <!-- Content Area -->
+                <ScrollViewer Grid.Row="1">
+                    <Panel>
+                        <!-- ================= PAGE 0: MAIN OPTIONS LIST ================= -->
+                        <StackPanel IsVisible="{Binding IsOptionsRootPage}" Spacing="2">
+                            <!-- Open File -->
+                            <Button Classes="iris-drawer-item" Click="OnOpenFileClick">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <PathIcon Grid.Column="0" Data="{StaticResource FolderIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Open File..." FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
+                                        <TextBlock Text="Choose media to play" FontSize="11" Foreground="#888888" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" Text="Ctrl+O" FontSize="11" Foreground="#666666" VerticalAlignment="Center" />
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
 
-                <!-- Aspect Ratio -->
-                <Button Classes="iris-menu-item" Command="{Binding CycleAspectRatioCommand}">
-                    <Grid ColumnDefinitions="Auto, *, Auto">
-                        <PathIcon Grid.Column="0" Data="{StaticResource AspectRatioIcon}" Width="13" Height="13" Classes="liquid-icon" Margin="0,0,8,0" />
-                        <TextBlock Grid.Column="1" Text="Aspect Ratio" FontSize="11" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" Text="{Binding AspectRatioName}" FontSize="11" Foreground="{StaticResource AccentLiquidBrush}" VerticalAlignment="Center" />
-                    </Grid>
-                </Button>
+                            <!-- Open Folder -->
+                            <Button Classes="iris-drawer-item" Click="OnOpenFolderClick">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <PathIcon Grid.Column="0" Data="{StaticResource FolderIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Open Folder..." FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
+                                        <TextBlock Text="Play all media in folder" FontSize="11" Foreground="#888888" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" Text="Ctrl+F" FontSize="11" Foreground="#666666" VerticalAlignment="Center" />
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
 
-                <!-- Playback Speed -->
-                <Button Classes="iris-menu-item" Command="{Binding CycleSpeedCommand}">
-                    <Grid ColumnDefinitions="Auto, *, Auto">
-                        <PathIcon Grid.Column="0" Data="{StaticResource StepForwardIcon}" Width="13" Height="13" Classes="liquid-icon" Margin="0,0,8,0" />
-                        <TextBlock Grid.Column="1" Text="Speed" FontSize="11" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" Text="{Binding SpeedDisplayUpper}" FontSize="11" Foreground="{StaticResource AccentLiquidBrush}" VerticalAlignment="Center" />
-                    </Grid>
-                </Button>
+                            <!-- Open URL / Stream -->
+                            <Button Classes="iris-drawer-item" Click="OnOpenUrlClick">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <PathIcon Grid.Column="0" Data="{StaticResource IrisBadgeIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Open URL / Stream..." FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
+                                        <TextBlock Text="Direct network stream" FontSize="11" Foreground="#888888" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" Text="Ctrl+U" FontSize="11" Foreground="#666666" VerticalAlignment="Center" />
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
 
-                <!-- Subtitles & Audio Tracks -->
-                <Button Classes="iris-menu-item" Command="{Binding ToggleTracksMenuCommand}">
-                    <Grid ColumnDefinitions="Auto, *, Auto">
-                        <PathIcon Grid.Column="0" Data="{StaticResource CcIcon}" Width="13" Height="13" Classes="liquid-icon" Margin="0,0,8,0" />
-                        <TextBlock Grid.Column="1" Text="Tracks &amp; Delay" FontSize="11" VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2" Text="C" FontSize="10" Foreground="#666666" VerticalAlignment="Center" />
-                    </Grid>
-                </Button>
+                            <!-- Take Snapshot -->
+                            <Button Classes="iris-drawer-item" Command="{Binding TakeSnapshotCommand}">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <PathIcon Grid.Column="0" Data="{StaticResource CameraIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Take Snapshot" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
+                                        <TextBlock Text="Save frame to Pictures" FontSize="11" Foreground="#888888" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" Text="Ctrl+S" FontSize="11" Foreground="#666666" VerticalAlignment="Center" />
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
 
-                <!-- Open Media File -->
-                <Button Classes="iris-menu-item" Click="OnOpenFileClick">
-                    <Grid ColumnDefinitions="Auto, *">
-                        <PathIcon Grid.Column="0" Data="{StaticResource FolderIcon}" Width="13" Height="13" Classes="liquid-icon" Margin="0,0,8,0" />
-                        <TextBlock Grid.Column="1" Text="Open File..." FontSize="11" VerticalAlignment="Center" />
-                    </Grid>
-                </Button>
+                            <!-- Aspect Ratio (Navigates to sub-page) -->
+                            <Button Classes="iris-drawer-item" Command="{Binding NavigateToOptionsPageCommand}" CommandParameter="2">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <PathIcon Grid.Column="0" Data="{StaticResource AspectRatioIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Aspect Ratio" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
+                                        <TextBlock Text="Fit, 16:9, 4:3, 2.35:1" FontSize="11" Foreground="#888888" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding AspectRatioName}" FontSize="12" Foreground="{StaticResource AccentLiquidBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <PathIcon Data="{StaticResource ChevronRightIcon}" Width="10" Height="10" Foreground="#888888" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
 
-                <!-- Divider & Technical Specs -->
-                <Border BorderBrush="#1AFFFFFF" BorderThickness="0,1,0,0" Margin="4,4,4,2" />
-                <StackPanel Spacing="2" Margin="6,2">
-                    <TextBlock Text="{Binding Resolution, StringFormat='Resolution: {0}'}" FontSize="10" Foreground="#666666" />
-                    <TextBlock Text="{Binding VideoCodec, StringFormat='Codec: {0}'}" FontSize="10" Foreground="#666666" />
-                </StackPanel>
-            </StackPanel>
+                            <!-- Playback Speed (Navigates to sub-page) -->
+                            <Button Classes="iris-drawer-item" Command="{Binding NavigateToOptionsPageCommand}" CommandParameter="3">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <PathIcon Grid.Column="0" Data="{StaticResource StepForwardIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Playback Speed" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
+                                        <TextBlock Text="Slow motion or fast playback" FontSize="11" Foreground="#888888" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding SpeedDisplayUpper}" FontSize="12" Foreground="{StaticResource AccentLiquidBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <PathIcon Data="{StaticResource ChevronRightIcon}" Width="10" Height="10" Foreground="#888888" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+
+                            <!-- Rotate Video -->
+                            <Button Classes="iris-drawer-item" Command="{Binding CycleRotationCommand}">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <PathIcon Grid.Column="0" Data="{StaticResource RotateIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Rotate Video" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
+                                        <TextBlock Text="Click to cycle orientation" FontSize="11" Foreground="#888888" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" Text="{Binding RotationName}" FontSize="12" Foreground="{StaticResource AccentLiquidBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+
+                            <!-- Subtitles & Audio Tracks -->
+                            <Button Classes="iris-drawer-item" Command="{Binding OpenTracksFromOptionsCommand}">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <PathIcon Grid.Column="0" Data="{StaticResource CcIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Tracks &amp; Delay" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
+                                        <TextBlock Text="Audio dubs and subtitles" FontSize="11" Foreground="#888888" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <TextBlock Text="C" FontSize="11" Foreground="#666666" VerticalAlignment="Center" />
+                                        <PathIcon Data="{StaticResource ChevronRightIcon}" Width="10" Height="10" Foreground="#888888" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+
+                            <!-- Playlist Queue -->
+                            <Button Classes="iris-drawer-item" Command="{Binding OpenQueueFromOptionsCommand}">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <PathIcon Grid.Column="0" Data="{StaticResource PlaylistIrisIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Playlist Queue" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
+                                        <TextBlock Text="View or manage queue" FontSize="11" Foreground="#888888" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Playlist.Count, StringFormat='{}{0} files'}" FontSize="11" Foreground="#888888" VerticalAlignment="Center" />
+                                        <PathIcon Data="{StaticResource ChevronRightIcon}" Width="10" Height="10" Foreground="#888888" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+
+                            <!-- Technical Specs Box -->
+                            <Border Background="#10FFFFFF" CornerRadius="6" Padding="12,10" Margin="0,6,0,6">
+                                <StackPanel Spacing="3">
+                                    <TextBlock Text="MEDIA SPECIFICATIONS" FontSize="10" FontWeight="Bold" Foreground="#777780" />
+                                    <TextBlock Text="{Binding Resolution, StringFormat='Resolution: {0}'}" FontSize="11" Foreground="#AAAAAA" />
+                                    <TextBlock Text="{Binding VideoCodec, StringFormat='Video Codec: {0}'}" FontSize="11" Foreground="#AAAAAA" />
+                                    <TextBlock Text="{Binding AudioCodec, StringFormat='Audio Codec: {0}'}" FontSize="11" Foreground="#AAAAAA" />
+                                </StackPanel>
+                            </Border>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+
+                            <!-- SETTINGS (At last, prominent with subtitle & chevron) -->
+                            <Button Classes="iris-drawer-item"
+                                    Command="{Binding NavigateToOptionsPageCommand}"
+                                    CommandParameter="1"
+                                    Background="#14FFFFFF"
+                                    Margin="0,4,0,0">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <PathIcon Grid.Column="0" Data="{StaticResource SettingsGearIcon}" Width="18" Height="18" Foreground="#FFFFFF" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Settings" FontSize="14" FontWeight="SemiBold" Foreground="#FFFFFF" />
+                                        <TextBlock Text="Preferences, Audio &amp; Video Options" FontSize="11" Foreground="#AAAAAA" />
+                                    </StackPanel>
+                                    <PathIcon Grid.Column="2" Data="{StaticResource ChevronRightIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" VerticalAlignment="Center" />
+                                </Grid>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- ================= PAGE 1: SETTINGS SUB-PAGE ================= -->
+                        <StackPanel IsVisible="{Binding IsSettingsSubPage}" Spacing="2">
+                            <!-- Night Mode Normalizer -->
+                            <Button Classes="iris-drawer-item" Command="{Binding ToggleNightModeCommand}">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <PathIcon Grid.Column="0" Data="{StaticResource MoonIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Night Mode (Normalizer)" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
+                                        <TextBlock Text="Compress loud audio peaks" FontSize="11" Foreground="#888888" />
+                                    </StackPanel>
+                                    <Border Grid.Column="2" CornerRadius="4" Padding="8,3" Background="#20FFFFFF" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding NightModeStatusText}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentLiquidBrush}" />
+                                    </Border>
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+
+                            <!-- Always On Top -->
+                            <Button Classes="iris-drawer-item" Command="{Binding ToggleAlwaysOnTopCommand}">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <PathIcon Grid.Column="0" Data="{StaticResource PinIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Always on Top (Pin)" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
+                                        <TextBlock Text="Keep window above other apps" FontSize="11" Foreground="#888888" />
+                                    </StackPanel>
+                                    <Border Grid.Column="2" CornerRadius="4" Padding="8,3" Background="#20FFFFFF" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding AlwaysOnTopStatusText}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentLiquidBrush}" />
+                                    </Border>
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+
+                            <!-- Hardware Video Acceleration -->
+                            <Border Classes="iris-drawer-item" Padding="14,11">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <PathIcon Grid.Column="0" Data="{StaticResource IrisBadgeIcon}" Width="16" Height="16" Foreground="#4CAF50" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Hardware Decoding" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
+                                        <TextBlock Text="GPU Native Pipeline (OpenGL / WGL)" FontSize="11" Foreground="#888888" />
+                                    </StackPanel>
+                                    <Border Grid.Column="2" CornerRadius="4" Padding="8,3" Background="#204CAF50" VerticalAlignment="Center">
+                                        <TextBlock Text="Active" FontSize="11" FontWeight="Bold" Foreground="#4CAF50" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+
+                            <!-- Repeat Playback Mode -->
+                            <Button Classes="iris-drawer-item" Command="{Binding ToggleRepeatCommand}">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <PathIcon Grid.Column="0" Data="{StaticResource RepeatIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Repeat Mode" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
+                                        <TextBlock Text="Click to toggle Off, All, One" FontSize="11" Foreground="#888888" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" Text="{Binding RepeatModeName}" FontSize="12" Foreground="{StaticResource AccentLiquidBrush}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+
+                            <!-- Shuffle Mode -->
+                            <Button Classes="iris-drawer-item" Command="{Binding ToggleShuffleCommand}">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <PathIcon Grid.Column="0" Data="{StaticResource ShuffleIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Shuffle Playlist" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
+                                        <TextBlock Text="Randomize track order" FontSize="11" Foreground="#888888" />
+                                    </StackPanel>
+                                    <Border Grid.Column="2" CornerRadius="4" Padding="8,3" Background="#20FFFFFF" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding ShuffleStatusText}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource AccentLiquidBrush}" />
+                                    </Border>
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+
+                            <!-- Preferences -->
+                            <Button Classes="iris-drawer-item" Command="{Binding OpenPreferencesCommand}">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <PathIcon Grid.Column="0" Data="{StaticResource SettingsGearIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Advanced Preferences..." FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
+                                        <TextBlock Text="Audio/video renderer configuration" FontSize="11" Foreground="#888888" />
+                                    </StackPanel>
+                                    <PathIcon Grid.Column="2" Data="{StaticResource ChevronRightIcon}" Width="10" Height="10" Foreground="#888888" VerticalAlignment="Center" />
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+
+                            <!-- About CORE PLAYER -->
+                            <Button Classes="iris-drawer-item" Click="OnAboutClick">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <PathIcon Grid.Column="0" Data="{StaticResource IrisBadgeIcon}" Width="16" Height="16" Foreground="{StaticResource AccentLiquidBrush}" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="About CORE PLAYER" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
+                                        <TextBlock Text="v1.0 • Liquid Glass Edition" FontSize="11" Foreground="#888888" />
+                                    </StackPanel>
+                                    <PathIcon Grid.Column="2" Data="{StaticResource ChevronRightIcon}" Width="10" Height="10" Foreground="#888888" VerticalAlignment="Center" />
+                                </Grid>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- ================= PAGE 2: ASPECT RATIO SUB-PAGE ================= -->
+                        <StackPanel IsVisible="{Binding IsAspectRatioSubPage}" Spacing="2">
+                            <!-- Fit to Window -->
+                            <Button Classes="iris-drawer-item" Command="{Binding SetAspectRatioCommand}" CommandParameter="-1">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <TextBlock Grid.Column="0" Text="Fit to Window (Default)" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsAspectFit}" />
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+
+                            <!-- 16:9 Widescreen -->
+                            <Button Classes="iris-drawer-item" Command="{Binding SetAspectRatioCommand}" CommandParameter="16:9">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <TextBlock Grid.Column="0" Text="16:9 Widescreen" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsAspect169}" />
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+
+                            <!-- 4:3 Standard -->
+                            <Button Classes="iris-drawer-item" Command="{Binding SetAspectRatioCommand}" CommandParameter="4:3">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <TextBlock Grid.Column="0" Text="4:3 Standard TV" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsAspect43}" />
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+
+                            <!-- 2.35:1 Cinematic -->
+                            <Button Classes="iris-drawer-item" Command="{Binding SetAspectRatioCommand}" CommandParameter="2.35:1">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <TextBlock Grid.Column="0" Text="2.35:1 Anamorphic Cinematic" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsAspect235}" />
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+
+                            <!-- 21:9 Ultra-Wide -->
+                            <Button Classes="iris-drawer-item" Command="{Binding SetAspectRatioCommand}" CommandParameter="21:9">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <TextBlock Grid.Column="0" Text="21:9 Ultra-Wide" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsAspect219}" />
+                                </Grid>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- ================= PAGE 3: PLAYBACK SPEED SUB-PAGE ================= -->
+                        <StackPanel IsVisible="{Binding IsSpeedSubPage}" Spacing="2">
+                            <!-- 0.5x -->
+                            <Button Classes="iris-drawer-item" Command="{Binding SetSpeedCommand}" CommandParameter="0.5">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <TextBlock Grid.Column="0" Text="0.5x (Slow Motion)" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsSpeed05}" />
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+
+                            <!-- 0.75x -->
+                            <Button Classes="iris-drawer-item" Command="{Binding SetSpeedCommand}" CommandParameter="0.75">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <TextBlock Grid.Column="0" Text="0.75x" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsSpeed075}" />
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+
+                            <!-- 1.0x (Normal) -->
+                            <Button Classes="iris-drawer-item" Command="{Binding SetSpeedCommand}" CommandParameter="1.0">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <TextBlock Grid.Column="0" Text="1.0x (Normal Speed)" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsSpeed10}" />
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+
+                            <!-- 1.25x -->
+                            <Button Classes="iris-drawer-item" Command="{Binding SetSpeedCommand}" CommandParameter="1.25">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <TextBlock Grid.Column="0" Text="1.25x" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsSpeed125}" />
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+
+                            <!-- 1.5x -->
+                            <Button Classes="iris-drawer-item" Command="{Binding SetSpeedCommand}" CommandParameter="1.5">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <TextBlock Grid.Column="0" Text="1.5x" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsSpeed15}" />
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+
+                            <!-- 1.75x -->
+                            <Button Classes="iris-drawer-item" Command="{Binding SetSpeedCommand}" CommandParameter="1.75">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <TextBlock Grid.Column="0" Text="1.75x" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsSpeed175}" />
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#14FFFFFF" Margin="10,0" />
+
+                            <!-- 2.0x -->
+                            <Button Classes="iris-drawer-item" Command="{Binding SetSpeedCommand}" CommandParameter="2.0">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <TextBlock Grid.Column="0" Text="2.0x (Double Speed)" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" VerticalAlignment="Center" />
+                                    <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="{StaticResource AccentLiquidBrush}" IsVisible="{Binding IsSpeed20}" />
+                                </Grid>
+                            </Button>
+                        </StackPanel>
+                    </Panel>
+                </ScrollViewer>
+            </Grid>
         </Border>
 
         <!-- ================= LAYER 5: PLAYLIST QUEUE DRAWER ================= -->

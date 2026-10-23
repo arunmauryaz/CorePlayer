@@ -416,4 +416,63 @@ public class MainViewModelTests
         Assert.False(vm.IsFullscreen);
         Assert.True(propertyChangedFired);
     }
+
+    [Fact]
+    public void OptionsDrawer_Navigation_And_SubPages_WorkAsExpected()
+    {
+        var playback = new FakePlaybackService();
+        var storage = new FakeStorageService();
+
+        using var vm = new MainViewModel(playback, storage);
+        Assert.False(vm.IsMoreMenuOpen);
+        Assert.True(vm.IsOptionsRootPage);
+        Assert.False(vm.IsSettingsSubPage);
+        Assert.False(vm.IsOptionsSubPage);
+
+        // Open drawer
+        vm.ToggleMoreMenu();
+        Assert.True(vm.IsMoreMenuOpen);
+        Assert.True(vm.IsOptionsRootPage);
+
+        // Navigate to Settings (page 1)
+        vm.NavigateToOptionsPage(1);
+        Assert.False(vm.IsOptionsRootPage);
+        Assert.True(vm.IsSettingsSubPage);
+        Assert.True(vm.IsOptionsSubPage);
+        Assert.Equal("Settings", vm.OptionsPanelTitle);
+
+        // Navigate back to root
+        vm.NavigateBack();
+        Assert.True(vm.IsOptionsRootPage);
+        Assert.False(vm.IsSettingsSubPage);
+        Assert.False(vm.IsOptionsSubPage);
+        Assert.Equal("Options", vm.OptionsPanelTitle);
+
+        // Navigate to Aspect Ratio (page 2)
+        vm.NavigateToOptionsPage(2);
+        Assert.True(vm.IsAspectRatioSubPage);
+        Assert.Equal("Aspect Ratio", vm.OptionsPanelTitle);
+
+        // Set Aspect Ratio to 16:9
+        vm.SetAspectRatio("16:9");
+        Assert.Equal("16:9", playback.AspectRatio);
+        Assert.True(vm.IsAspect169);
+        Assert.False(vm.IsAspect43);
+
+        // Navigate to Speed (page 3)
+        vm.NavigateToOptionsPage(3);
+        Assert.True(vm.IsSpeedSubPage);
+        Assert.Equal("Playback Speed", vm.OptionsPanelTitle);
+
+        // Set speed
+        vm.SetSpeed("1.5");
+        Assert.Equal(1.5, playback.Speed);
+        Assert.True(vm.IsSpeed15);
+        Assert.False(vm.IsSpeed10);
+
+        // Close menu
+        vm.CloseMoreMenu();
+        Assert.False(vm.IsMoreMenuOpen);
+        Assert.True(vm.IsOptionsRootPage);
+    }
 }

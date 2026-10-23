@@ -183,6 +183,32 @@
         <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
 
+    <!-- Modern Side Panel Drawer Item Button (Spacious, prominent, divided with thin line) -->
+    <Style Selector="Button.iris-drawer-item">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="#EEEEEE" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Padding" Value="14,11" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.12" />
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button.iris-drawer-item:pointerover">
+        <Setter Property="Background" Value="#1AFFFFFF" />
+        <Setter Property="Foreground" Value="#FFFFFF" />
+    </Style>
+    <Style Selector="Button.iris-drawer-item.active">
+        <Setter Property="Background" Value="#22FFFFFF" />
+        <Setter Property="Foreground" Value="{StaticResource AccentLiquidBrush}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
     <!-- Liquid Glass Fat 12px Seekbar with Small 7px Ball Thumb - Centered Layout -->
     <Style Selector="Slider.iris-slider">
         <Style.Resources>

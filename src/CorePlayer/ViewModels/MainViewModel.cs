@@ -134,6 +134,97 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private bool _isMoreMenuOpen;
 
+    [ObservableProperty]
+    private int _optionsPanelPage;
+
+    public bool IsOptionsRootPage => OptionsPanelPage == 0;
+    public bool IsSettingsSubPage => OptionsPanelPage == 1;
+    public bool IsAspectRatioSubPage => OptionsPanelPage == 2;
+    public bool IsSpeedSubPage => OptionsPanelPage == 3;
+    public bool IsOptionsSubPage => OptionsPanelPage != 0;
+
+    public string OptionsPanelTitle => OptionsPanelPage switch
+    {
+        1 => "Settings",
+        2 => "Aspect Ratio",
+        3 => "Playback Speed",
+        _ => "Options"
+    };
+
+    partial void OnOptionsPanelPageChanged(int value)
+    {
+        OnPropertyChanged(nameof(IsOptionsRootPage));
+        OnPropertyChanged(nameof(IsSettingsSubPage));
+        OnPropertyChanged(nameof(IsAspectRatioSubPage));
+        OnPropertyChanged(nameof(IsSpeedSubPage));
+        OnPropertyChanged(nameof(IsOptionsSubPage));
+        OnPropertyChanged(nameof(OptionsPanelTitle));
+    }
+
+    [ObservableProperty]
+    private string _rotationName = "0° Normal";
+
+    public string RepeatModeName => RepeatMode switch
+    {
+        1 => "Repeat All",
+        2 => "Repeat One",
+        _ => "Off"
+    };
+
+    public string NightModeStatusText => IsNightMode ? "ON" : "OFF";
+    public string AlwaysOnTopStatusText => IsAlwaysOnTop ? "ON" : "OFF";
+    public string ShuffleStatusText => Shuffle ? "ON" : "OFF";
+
+    partial void OnIsAlwaysOnTopChanged(bool value)
+    {
+        OnPropertyChanged(nameof(AlwaysOnTopStatusText));
+    }
+
+    partial void OnIsNightModeChanged(bool value)
+    {
+        OnPropertyChanged(nameof(NightModeStatusText));
+    }
+
+    partial void OnShuffleChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ShuffleStatusText));
+        OnPropertyChanged(nameof(ShuffleOpacity));
+    }
+
+    public bool IsAspectFit => _playback.AspectRatio == "-1" || _playback.AspectRatio == "fit" || AspectRatioName == "Fit";
+    public bool IsAspect169 => _playback.AspectRatio == "16:9" || AspectRatioName == "16:9";
+    public bool IsAspect43 => _playback.AspectRatio == "4:3" || AspectRatioName == "4:3";
+    public bool IsAspect235 => _playback.AspectRatio == "2.35:1" || AspectRatioName == "2.35:1";
+    public bool IsAspect219 => _playback.AspectRatio == "21:9" || AspectRatioName == "21:9";
+
+    public bool IsSpeed05 => Math.Abs(Speed - 0.5) < 0.01;
+    public bool IsSpeed075 => Math.Abs(Speed - 0.75) < 0.01;
+    public bool IsSpeed10 => Math.Abs(Speed - 1.0) < 0.01;
+    public bool IsSpeed125 => Math.Abs(Speed - 1.25) < 0.01;
+    public bool IsSpeed15 => Math.Abs(Speed - 1.5) < 0.01;
+    public bool IsSpeed175 => Math.Abs(Speed - 1.75) < 0.01;
+    public bool IsSpeed20 => Math.Abs(Speed - 2.0) < 0.01;
+
+    public void NotifyAspectProperties()
+    {
+        OnPropertyChanged(nameof(IsAspectFit));
+        OnPropertyChanged(nameof(IsAspect169));
+        OnPropertyChanged(nameof(IsAspect43));
+        OnPropertyChanged(nameof(IsAspect235));
+        OnPropertyChanged(nameof(IsAspect219));
+    }
+
+    public void NotifySpeedProperties()
+    {
+        OnPropertyChanged(nameof(IsSpeed05));
+        OnPropertyChanged(nameof(IsSpeed075));
+        OnPropertyChanged(nameof(IsSpeed10));
+        OnPropertyChanged(nameof(IsSpeed125));
+        OnPropertyChanged(nameof(IsSpeed15));
+        OnPropertyChanged(nameof(IsSpeed175));
+        OnPropertyChanged(nameof(IsSpeed20));
+    }
+
     public string SpeedDisplayUpper => $"{Speed:0.##}X";
     public double ShuffleOpacity => Shuffle ? 1.0 : 0.45;
     public double RepeatOpacity => RepeatMode > 0 ? 1.0 : 0.45;
@@ -688,6 +779,7 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         Speed = nextSpeed;
         SpeedText = $"{Speed:0.##}x";
         OnPropertyChanged(nameof(SpeedDisplayUpper));
+        NotifySpeedProperties();
         _playback.SetSpeed(Speed);
 
         ShowToast($"Playback Speed: {SpeedText}");
@@ -701,6 +793,7 @@ public partial class MainViewModel : ViewModelBase, IDisposable
             Speed = s;
             SpeedText = $"{Speed:0.##}x";
             OnPropertyChanged(nameof(SpeedDisplayUpper));
+            NotifySpeedProperties();
             _playback.SetSpeed(Speed);
             ShowToast($"Speed: {SpeedText}");
         }
@@ -900,6 +993,7 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     {
         RepeatMode = (RepeatMode + 1) % 3;
         OnPropertyChanged(nameof(RepeatOpacity));
+        OnPropertyChanged(nameof(RepeatModeName));
         var modeName = RepeatMode switch
         {
             1 => "Repeat All",
@@ -930,6 +1024,7 @@ public partial class MainViewModel : ViewModelBase, IDisposable
 
         _playback.SetAspectRatio(val);
         AspectRatioName = label;
+        NotifyAspectProperties();
         ShowToast($"Aspect Ratio: {label}");
     }
 
@@ -938,6 +1033,7 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     {
         _playback.SetAspectRatio(ratio);
         AspectRatioName = ratio == "-1" ? "Fit" : ratio;
+        NotifyAspectProperties();
         ShowToast($"Aspect Ratio: {AspectRatioName}");
     }
 
@@ -947,10 +1043,67 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         IsMoreMenuOpen = !IsMoreMenuOpen;
         if (IsMoreMenuOpen)
         {
+            OptionsPanelPage = 0;
             IsQueueOpen = false;
             IsTracksMenuOpen = false;
             IsInfoModalOpen = false;
         }
+    }
+
+    [RelayCommand]
+    public void NavigateToOptionsPage(object? param)
+    {
+        if (param is int p) OptionsPanelPage = p;
+        else if (param is string s && int.TryParse(s, out var parsed)) OptionsPanelPage = parsed;
+    }
+
+    [RelayCommand]
+    public void NavigateBack()
+    {
+        OptionsPanelPage = 0;
+    }
+
+    [RelayCommand]
+    public void CloseMoreMenu()
+    {
+        IsMoreMenuOpen = false;
+        OptionsPanelPage = 0;
+    }
+
+    [RelayCommand]
+    public void OpenTracksFromOptions()
+    {
+        IsMoreMenuOpen = false;
+        ToggleTracksMenu();
+    }
+
+    [RelayCommand]
+    public void OpenQueueFromOptions()
+    {
+        IsMoreMenuOpen = false;
+        ToggleQueue();
+    }
+
+    [RelayCommand]
+    public void CycleRotation()
+    {
+        var current = _playback.Rotation;
+        var next = current switch
+        {
+            VideoRotation.Normal => VideoRotation.Rotate90,
+            VideoRotation.Rotate90 => VideoRotation.Rotate180,
+            VideoRotation.Rotate180 => VideoRotation.Rotate270,
+            _ => VideoRotation.Normal
+        };
+        _playback.SetRotation(next);
+        RotationName = next switch
+        {
+            VideoRotation.Rotate90 => "90° Clockwise",
+            VideoRotation.Rotate180 => "180° Inverted",
+            VideoRotation.Rotate270 => "270° Counter-Clockwise",
+            _ => "0° Normal"
+        };
+        ShowToast($"Video Rotation: {RotationName}");
     }
 
     [RelayCommand]
