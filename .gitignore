@@ -16,9 +16,14 @@
 
 ## App Data & Artifacts
 preview.png
+preview_ui.png
 capture.ps1
 *.log
 *.mp4
+scratch/
+Icons/
+release/
+dist/
 
 ## Agent workspace
 .agents/
