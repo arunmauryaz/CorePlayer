@@ -19,3 +19,6 @@ preview.png
 capture.ps1
 *.log
 *.mp4
+
+## Agent workspace
+.agents/
