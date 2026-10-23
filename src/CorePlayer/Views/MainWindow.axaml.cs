@@ -23,6 +23,9 @@ public partial class MainWindow : Window
     private readonly Cursor _hiddenCursor = new(StandardCursorType.None);
     private bool _isUpdatingFullscreen;
     private MainViewModel? _hookedViewModel;
+    private DispatcherTimer? _volumeCollapseTimer;
+    private bool _isPointerOverVolume;
+    private bool _isDraggingVolumeSlider;
 
     public MainWindow()
     {
@@ -50,6 +53,17 @@ public partial class MainWindow : Window
         AddHandler(DragDrop.DragLeaveEvent, OnDragLeave);
         AddHandler(InputElement.PointerMovedEvent, OnWindowPointerMoved, RoutingStrategies.Tunnel);
 
+        VolumeSlider.AddHandler(InputElement.PointerPressedEvent, OnVolumeSliderPointerPressed, RoutingStrategies.Tunnel);
+        VolumeSlider.AddHandler(InputElement.PointerReleasedEvent, OnVolumeSliderPointerReleased, RoutingStrategies.Tunnel);
+        VolumeSlider.AddHandler(InputElement.PointerCaptureLostEvent, (s, e) =>
+        {
+            _isDraggingVolumeSlider = false;
+            if (!_isPointerOverVolume)
+            {
+                ExpandVolumeSlider(400);
+            }
+        }, RoutingStrategies.Tunnel);
+
         this.GetPropertyChangedObservable(WindowStateProperty).Subscribe(_ =>
         {
             if (_isUpdatingFullscreen) return;
@@ -75,6 +89,71 @@ public partial class MainWindow : Window
                 }
             }
         });
+    }
+
+    private void ExpandVolumeSlider(int holdDurationMs = 800)
+    {
+        VolumeControlBorder?.Classes.Set("expanded", true);
+        _volumeCollapseTimer?.Stop();
+
+        if (holdDurationMs > 0)
+        {
+            if (_volumeCollapseTimer == null)
+            {
+                _volumeCollapseTimer = new DispatcherTimer();
+                _volumeCollapseTimer.Tick += (_, _) =>
+                {
+                    _volumeCollapseTimer.Stop();
+                    if (!_isPointerOverVolume && !_isDraggingVolumeSlider)
+                    {
+                        VolumeControlBorder?.Classes.Set("expanded", false);
+                    }
+                };
+            }
+            _volumeCollapseTimer.Interval = TimeSpan.FromMilliseconds(holdDurationMs);
+            _volumeCollapseTimer.Start();
+        }
+    }
+
+    private void OnVolumePointerEntered(object? sender, PointerEventArgs e)
+    {
+        _isPointerOverVolume = true;
+        ExpandVolumeSlider(0);
+    }
+
+    private void OnVolumePointerExited(object? sender, PointerEventArgs e)
+    {
+        _isPointerOverVolume = false;
+        if (!_isDraggingVolumeSlider)
+        {
+            ExpandVolumeSlider(350);
+        }
+    }
+
+    private void OnVolumePointerWheelChanged(object? sender, PointerWheelEventArgs e)
+    {
+        if (ViewModel == null) return;
+
+        int step = e.Delta.Y > 0 ? 5 : -5;
+        ViewModel.AdjustVolume(step);
+
+        ExpandVolumeSlider(1000);
+        e.Handled = true;
+    }
+
+    private void OnVolumeSliderPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        _isDraggingVolumeSlider = true;
+        ExpandVolumeSlider(0);
+    }
+
+    private void OnVolumeSliderPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        _isDraggingVolumeSlider = false;
+        if (!_isPointerOverVolume)
+        {
+            ExpandVolumeSlider(400);
+        }
     }
 
     private void HookViewModel(MainViewModel? vm)

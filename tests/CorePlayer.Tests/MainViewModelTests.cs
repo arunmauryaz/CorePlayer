@@ -214,6 +214,24 @@ public class MainViewModelTests
     }
 
     [Fact]
+    public void AdjustVolume_WhenMuted_RestoresFromUnmutedVolume()
+    {
+        var playback = new FakePlaybackService();
+        var storage = new FakeStorageService();
+        using var vm = new MainViewModel(playback, storage);
+
+        vm.Volume = 80;
+        vm.ToggleMute();
+        Assert.True(vm.IsMuted);
+        Assert.Equal(0, vm.Volume);
+
+        // Scrolling up while muted restores from 80 + 5 = 85 and unmutes
+        vm.AdjustVolume(5);
+        Assert.False(vm.IsMuted);
+        Assert.Equal(85, vm.Volume);
+    }
+
+    [Fact]
     public void ToggleFullscreen_TogglesIsFullscreenProperty()
     {
         var playback = new FakePlaybackService();

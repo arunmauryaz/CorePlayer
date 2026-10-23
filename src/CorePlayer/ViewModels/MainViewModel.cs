@@ -643,7 +643,8 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     public void AdjustVolume(int delta)
     {
-        var target = IsMuted ? delta : Volume + delta;
+        var baseVol = IsMuted ? _unmutedVolume : Volume;
+        var target = baseVol + delta;
         Volume = Math.Clamp(target, 0, 150);
     }
 

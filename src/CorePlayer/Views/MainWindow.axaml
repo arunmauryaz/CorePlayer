@@ -297,8 +297,14 @@
                                    VerticalAlignment="Center" />
                     </Button>
 
-                    <!-- Volume Group (Generous hit-test container for smooth slider interaction) -->
-                    <Border Classes="volume-box" Background="Transparent" VerticalAlignment="Center">
+                    <!-- Volume Group (Collapsed by default; expands on hover; scroll wheel adjusts volume) -->
+                    <Border x:Name="VolumeControlBorder"
+                            Classes="volume-box"
+                            Background="Transparent"
+                            VerticalAlignment="Center"
+                            PointerEntered="OnVolumePointerEntered"
+                            PointerExited="OnVolumePointerExited"
+                            PointerWheelChanged="OnVolumePointerWheelChanged">
                         <StackPanel Classes="volume-container" Orientation="Horizontal" VerticalAlignment="Center" Background="Transparent">
                             <!-- Volume / Mute Button -->
                             <Button Classes="iris-btn" Command="{Binding ToggleMuteCommand}" ToolTip.Tip="Mute (M)">
@@ -308,11 +314,17 @@
                                 </Panel>
                             </Button>
 
-                            <!-- Liquid Glass Fat 10px Volume Slider (Expands smoothly on hover and stays open while tweaking) -->
-                            <Slider Classes="iris-vol"
-                                    Minimum="0" Maximum="150"
-                                    Value="{Binding Volume, Mode=TwoWay}"
-                                    VerticalAlignment="Center" />
+                            <!-- Liquid Glass Volume Slider (Collapsed by default, expands on hover or wheel) -->
+                            <Border x:Name="VolumeSliderWrapper"
+                                    Classes="vol-wrapper"
+                                    ClipToBounds="True"
+                                    VerticalAlignment="Center">
+                                <Slider x:Name="VolumeSlider"
+                                        Classes="iris-vol"
+                                        Minimum="0" Maximum="150"
+                                        Value="{Binding Volume, Mode=TwoWay}"
+                                        VerticalAlignment="Center" />
+                            </Border>
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -328,7 +340,7 @@
                                Foreground="#EEEEEE"
                                FontFamily="{StaticResource MonospaceFont}"
                                VerticalAlignment="Center"
-                               Margin="0,0,10,0" />
+                               Margin="0,0,6,0" />
 
                     <!-- Liquid Glass Broad 12px Seekbar with Small Ball Thumb (Perfect True Center) -->
                     <Slider Grid.Column="1"
@@ -338,6 +350,7 @@
                             Value="{Binding PositionSeconds, Mode=TwoWay}"
                             VerticalAlignment="Center"
                             HorizontalAlignment="Stretch"
+                            MinWidth="30"
                             Margin="0" />
 
                     <!-- Total Duration -->
@@ -348,7 +361,7 @@
                                Foreground="#EEEEEE"
                                FontFamily="{StaticResource MonospaceFont}"
                                VerticalAlignment="Center"
-                               Margin="10,0,0,0" />
+                               Margin="6,0,0,0" />
                 </Grid>
 
                 <!-- ===== RIGHT GROUP: TOOLS & OPTIONS ===== -->
