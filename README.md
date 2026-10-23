@@ -9,105 +9,116 @@
 [![Framework](https://img.shields.io/badge/.NET%208-C%23%2012-512BD4?style=for-the-badge&logo=dotnet)](https://dotnet.microsoft.com/)
 [![Avalonia UI](https://img.shields.io/badge/Avalonia%20UI-11.2-8B5CF6?style=for-the-badge)](https://avaloniaui.net/)
 [![Engine](https://img.shields.io/badge/Core%20Engine-libmpv-orange?style=for-the-badge)](https://mpv.io/)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 
 <br/>
 
-<img src="docs/screenshots/player_overview.png" alt="CorePlayer Interface" width="92%" style="border-radius: 10px; box-shadow: 0 12px 40px rgba(0,0,0,0.6);" />
-
-<br/>
-<br/>
-
-**CorePlayer** is a minimal, precision-engineered media player built with **.NET 8** and **Avalonia UI**, powered by the industry-standard **libmpv** native rendering pipeline. Engineered around a refined **Studio Obsidian & Frosted Silver** aesthetic, controls stay quietly out of your way and seamlessly vanish during playback so your content takes center stage.
+**CorePlayer** is a minimal, precision-engineered media player built with **.NET 8** and **Avalonia UI**, powered by the industry-standard **libmpv** native multimedia core. Designed around a **Studio Obsidian & Frosted Silver** aesthetic, controls stay quietly out of your way and seamlessly vanish during playback so your content takes center stage.
 
 </div>
 
 ---
 
-## ⚡ Highlights
+## 📖 Overview & Philosophy
 
-- **🚀 Native GPU Pipeline:** Powered by `libmpv` (v0.36) with Direct3D11/OpenGL hardware acceleration, rendering butter-smooth 60+ FPS playback across 4K, 8K, HDR, HEVC, AV1, and VP9.
-- **🎨 Studio Obsidian Aesthetic:** Elegant deep-charcoal glass UI with clean silver typography and ice-blue precision accents—crafted to eliminate visual noise and clunky web-player clutter.
-- **📱 Right-Side Slide Drawer:** Modern swipe/slide drawer for quick access to Aspect Ratios, Playback Speed presets, Video Rotation, Audio Dub tracks, and deep Settings sub-pages.
-- **🔊 Auto-Hiding Interactive Volume:** The volume slider stays neatly tucked away until you hover over it or use the mouse scroll wheel.
-- **🔄 Smart Seamless Resume:** Remembers your exact timestamp per video and picks up right where you left off automatically without nagging modal prompts.
-- **🎛️ Dual Dubs & Subtitle Management:** Multi-language audio dub switcher, subtitle delay calibration (+/- 100ms), and drag-and-drop `.srt`/`.ass` subtitle loading.
-- **🪟 Rock-Solid Fullscreen & Window Pinning:** Window controls (Minimize, Maximize/Restore, Close, and Always-on-Top Pin) stay locked in place regardless of windowed or fullscreen mode.
+Most modern media players are weighed down by heavy browser engines, telemetry, sluggish web UI, or overly busy chrome. **CorePlayer** was designed from the ground up to restore desktop elegance and raw playback performance:
 
----
-
-## 📸 Interface Showcase
-
-<table width="100%">
-  <tr>
-    <td width="50%" align="center">
-      <b>Sleek Bottom Deck & True-Center Seekbar</b><br/><br/>
-      <img src="docs/screenshots/player_controls.png" alt="Player Controls" width="100%" />
-    </td>
-    <td width="50%" align="center">
-      <b>Multi-Audio & Subtitle Dub Manager</b><br/><br/>
-      <img src="docs/screenshots/audio_subtitles.png" alt="Audio & Subtitles" width="100%" />
-    </td>
-  </tr>
-</table>
+- **Unobtrusive Immersion:** A pure pitch-black canvas (`#000000`) where video is the only focal point. Both top and bottom controls automatically fade away during playback, activating only when you move the cursor.
+- **Studio Obsidian Palette:** Replaces garish neon gradients with deep-charcoal glass (`#121316`), frosted silver controls (`#CBD5E1`), and refined ice-blue precision accents (`#38BDF8`).
+- **Zero Airspace Jitter:** Hardware-accelerated OpenGL surface integration directly inside the Avalonia visual tree eliminates Win32 window clipping and airspace bugs.
+- **Predictable Ergonomics:** Permanent top-right window controls (Always-on-Top Pin, Minimize, Maximize/Restore, and Close) that never shift or glitch between windowed and fullscreen modes.
 
 ---
 
-## ⌨️ Keyboard & Mouse Gestures
+## ⚡ Core Capabilities
 
-| Gesture / Key | Action |
+### 🚀 Direct GPU Multimedia Engine
+- Powered by `libmpv` (v0.36) with native Direct3D11 and OpenGL hardware decoders (`d3d11va`, `nvdec`, `dxva2`).
+- Butter-smooth playback across all formats: **4K/8K HDR**, HEVC (H.265), AVC (H.264), AV1, VP9, MKV, MP4, MOV, WEBM, AVI, TS, and FLV.
+- High-fidelity audio engine with dialogue boost, dynamic peak normalization, and pitch-compensated speed scaling from `0.5x` up to `2.0x`.
+
+### 📱 Right-Side Options Drawer
+- Clean, full-height slide-out panel accessible from the bottom-right hamburger menu.
+- **Multi-Level Navigation:** Drill down into sub-pages with a smooth `< Back` navigation header:
+  - **Aspect Ratio Sub-Menu:** Fit to Window, 16:9 Widescreen, 4:3 Standard TV, 2.35:1 Cinematic, and 21:9 Ultra-Wide.
+  - **Playback Speed Sub-Menu:** Presets from `0.5x` (slow motion) to `2.0x` (double speed) with live checkmark indicators.
+  - **Video Rotation:** Instant 90° clockwise orientation cycling.
+  - **Settings & Audio Options:** Dynamic Night Mode compression, Always-on-Top pinning, Shuffle, and Repeat.
+
+### 🔊 Auto-Hiding Interactive Volume
+- Collapsible volume bar stays completely hidden to keep the interface minimal.
+- Hovering over the volume button or rolling the mouse wheel over the audio zone smoothly expands the sound bar.
+- Supports volume boost up to **150%** for quiet recordings.
+
+### 🔄 Smart Auto-Resume
+- Remembers timestamps on a per-file basis across app restarts.
+- Videos automatically resume from the exact frame where you left off without nagging confirmation popups.
+
+### 🎛️ Dual Dubs & Subtitle Management
+- Bottom-right corner popover dedicated to multi-language audio dub tracks and subtitle streams.
+- Full support for internal embedded tracks (MKV/MP4) and external drag-and-drop subtitle files (`.srt`, `.ass`, `.vtt`).
+- Millisecond-precision subtitle delay sync adjustment (+/- 100ms).
+
+---
+
+## ⌨️ Keyboard & Gesture Cheatsheet
+
+| Key / Gesture | Function |
 | :--- | :--- |
-| `Space` | Play / Pause toggle |
+| `Space` | Play / Pause playback |
 | `Left Arrow` / `Right Arrow` | Seek backward / forward 5 seconds |
 | `Shift + Left` / `Shift + Right` | Seek backward / forward 30 seconds |
-| `Up Arrow` / `Down Arrow` | Volume adjust (+/- 5%) |
-| `Mouse Wheel (over Volume)` | Fast volume adjust with automatic slider reveal |
-| `M` | Instant Mute / Unmute toggle |
-| `F` or `Double Click` | Fullscreen toggle |
-| `Esc` | Exit fullscreen or close open drawer |
-| `C` | Toggle Audio Streams & Subtitle Popover |
-| `Shift + N` / `Shift + P` | Next / Previous item in Playlist Queue |
-| `Ctrl + S` | Capture crystal-clear instant snapshot to Pictures |
+| `Up Arrow` / `Down Arrow` | Volume Up / Down (+/- 5%) |
+| `Mouse Wheel` *(over Volume)* | Instant volume adjust with automatic slider reveal |
+| `M` | Mute / Unmute audio |
+| `F` or `Double Click` | Toggle Fullscreen mode |
+| `Esc` | Exit fullscreen or dismiss active drawer/popover |
+| `C` | Toggle Audio Streams & Subtitle Manager |
+| `Shift + N` / `Shift + P` | Next / Previous video in Playlist Queue |
+| `Ctrl + S` | Capture crystal-clear snapshot to Pictures folder |
 | `Ctrl + O` | Open file dialog |
-| `Ctrl + F` | Open folder / playlist |
-| `.` / `,` | Frame step forward / backward |
+| `Ctrl + F` | Open folder / batch playlist |
+| `.` / `,` | Frame-step forward / backward |
 
 ---
 
 ## 📥 Download & Installation
 
-### Option 1: Standalone Windows Package (Recommended)
-Download the latest portable zip package directly from our **[Releases](https://github.com/arunmauryaz/CorePlayer/releases)**:
-1. Download `CorePlayer-v1.0.0-win-x64.zip`.
-2. Extract to any directory on your PC.
-3. Double-click `CorePlayer.exe` to launch. *(No installation or external .NET runtimes required!)*
+### Option 1: Standalone Windows Package (Portable)
+Download the standalone executable directly from **[Releases](https://github.com/arunmauryaz/CorePlayer/releases)**:
+1. Download **`CorePlayer-v1.0.0-win-x64.zip`**.
+2. Extract the archive anywhere on your PC.
+3. Launch **`CorePlayer.exe`**.
 
-### Option 2: Clone & Run from Source
-If you have the **.NET 8 SDK** installed:
-```bash
-git clone git@github.com:arunmauryaz/CorePlayer.git
+> *Note: This package is completely self-contained. It includes the required .NET 8 runtime and native `libmpv-2.dll`—no external installations needed.*
+
+### Option 2: Run from Source
+Clone the repository and launch directly:
+```powershell
+git clone https://github.com/arunmauryaz/CorePlayer.git
 cd CorePlayer
 .\run.bat
 ```
 
 ---
 
-## 🏗️ Architecture & Technical Specs
+## 🏗️ Technical Architecture
 
-CorePlayer is engineered on a modular multi-tier architecture:
+CorePlayer follows clean architectural boundaries:
 - **Presentation Layer:** Avalonia UI 11.2 with custom compiled XAML bindings (`AvaloniaUseCompiledBindingsByDefault`).
-- **MVVM Foundation:** `CommunityToolkit.Mvvm` with decoupled commands, observables, and reactive notification handlers.
+- **MVVM Foundation:** `CommunityToolkit.Mvvm` with decoupled relay commands and observable properties.
 - **Engine Core:** `libmpv-2.dll` via `HanumanInstitute.LibMpv` with an asynchronous 60 FPS state sync dispatcher.
 - **Hardware Pipeline:** Direct GPU decoding via `auto-safe` (D3D11VA / DXVA2 / NVDEC / VAAPI).
 
-> 📘 *For comprehensive deep-dive architectural diagrams and engine specifications, see [`docs/PROJECT_CONTEXT_AND_PLANS.md`](docs/PROJECT_CONTEXT_AND_PLANS.md).*
+> 📘 *For complete architecture diagrams and subsystem specifications, refer to [`docs/PROJECT_CONTEXT_AND_PLANS.md`](docs/PROJECT_CONTEXT_AND_PLANS.md).*
 
 ---
 
-## 🛠️ Building & Testing
+## 🛠️ Build & Test
 
 To build the release binary locally:
 ```powershell
-# Restore and build Release
+# Restore and build in Release mode
 dotnet build -c Release
 
 # Execute test suite (36 unit tests)
@@ -118,6 +129,6 @@ dotnet test -c Release
 
 ## 📄 License & Credits
 
-- Licensed under the **MIT License**.
-- Media decoding powered by the [mpv player](https://mpv.io) project.
-- XAML engine powered by [Avalonia UI](https://avaloniaui.net).
+- Distributed under the **MIT License**.
+- Media playback engine powered by the [mpv player](https://mpv.io) project.
+- Modern cross-platform XAML engine powered by [Avalonia UI](https://avaloniaui.net).
