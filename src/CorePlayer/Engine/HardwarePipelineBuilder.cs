@@ -13,6 +13,8 @@ public class HardwarePipelineBuilder
             ["osd-bar"] = "no",
             ["osd-on-seek"] = "no",
             ["osd-level"] = "0",
+            ["hr-seek"] = "yes",
+            ["hr-seek-framedrop"] = "no",
             ["audio-pitch-correction"] = options.AudioPitchCorrection ? "yes" : "no",
             ["demuxer-max-bytes"] = options.DemuxerMaxBytes.ToString(),
             ["demuxer-max-back-bytes"] = options.DemuxerMaxBackBytes.ToString(),

@@ -278,7 +278,8 @@
                                Margin="0,0,6,0" />
 
                     <!-- Liquid Glass Broad 12px Seekbar with Small Ball Thumb (Perfect True Center) -->
-                    <Slider Grid.Column="1"
+                    <Slider x:Name="TimelineSlider"
+                            Grid.Column="1"
                             Classes="iris-slider"
                             Minimum="0"
                             Maximum="{Binding DurationSeconds}"
@@ -528,6 +529,56 @@
 
                         <!-- ================= PAGE 1: SETTINGS SUB-PAGE ================= -->
                         <StackPanel IsVisible="{Binding IsSettingsSubPage}" Spacing="2">
+                            <!-- Snapshot Storage Location -->
+                            <Border Background="#10FFFFFF" CornerRadius="8" Padding="12,10" Margin="0,2,0,4">
+                                <StackPanel Spacing="6">
+                                    <Grid ColumnDefinitions="Auto, *">
+                                        <PathIcon Grid.Column="0" Data="{StaticResource CameraIcon}" Width="15" Height="15" Foreground="#CBD5E1" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="1" Text="Snapshot Storage Folder" FontSize="13" FontWeight="SemiBold" Foreground="#EEEEEE" VerticalAlignment="Center" />
+                                    </Grid>
+                                    <TextBlock Text="{Binding SnapshotDirectoryDisplay}" FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap" />
+                                    <Grid ColumnDefinitions="*, *" Margin="0,4,0,0">
+                                        <Button Grid.Column="0" Classes="iris-drawer-back-btn" Click="OnChangeSnapshotFolderClick" Margin="0,0,4,0" HorizontalAlignment="Stretch">
+                                            <TextBlock Text="Change..." FontSize="11" HorizontalAlignment="Center" />
+                                        </Button>
+                                        <Button Grid.Column="1" Classes="iris-drawer-back-btn" Click="OnOpenSnapshotFolderClick" Margin="4,0,0,0" HorizontalAlignment="Stretch">
+                                            <TextBlock Text="Open Folder" FontSize="11" HorizontalAlignment="Center" />
+                                        </Button>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
+
+                            <!-- Auto-Resume Playback -->
+                            <Button Classes="iris-drawer-item" Command="{Binding ToggleAutoResumeCommand}">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <PathIcon Grid.Column="0" Data="{StaticResource PlayIcon}" Width="16" Height="16" Foreground="#CBD5E1" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Auto-Resume Media" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
+                                        <TextBlock Text="Resume from where you left off" FontSize="11" Foreground="#94A3B8" />
+                                    </StackPanel>
+                                    <Border Grid.Column="2" CornerRadius="4" Padding="8,3" Background="#1838BDF8" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding AutoResumeStatusText}" FontSize="11" FontWeight="SemiBold" Foreground="#38BDF8" />
+                                    </Border>
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
+
+                            <!-- Seek Step (Arrow Keys) -->
+                            <Button Classes="iris-drawer-item" Command="{Binding CycleSeekStepCommand}">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <PathIcon Grid.Column="0" Data="{StaticResource SkipForwardChevronIcon}" Width="16" Height="16" Foreground="#CBD5E1" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Seek Step Interval" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
+                                        <TextBlock Text="Arrow key skip duration" FontSize="11" Foreground="#94A3B8" />
+                                    </StackPanel>
+                                    <Border Grid.Column="2" CornerRadius="4" Padding="8,3" Background="#1838BDF8" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding SeekStepDisplay}" FontSize="11" FontWeight="SemiBold" Foreground="#38BDF8" />
+                                    </Border>
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
+
                             <!-- Night Mode Normalizer -->
                             <Button Classes="iris-drawer-item" Command="{Binding ToggleNightModeCommand}">
                                 <Grid ColumnDefinitions="Auto, *, Auto">

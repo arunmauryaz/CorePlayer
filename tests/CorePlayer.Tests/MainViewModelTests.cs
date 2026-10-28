@@ -29,6 +29,7 @@ public class MainViewModelTests
         public VideoRotation Rotation { get; set; } = VideoRotation.Normal;
         public HanumanInstitute.LibMpv.MpvContext Context => null!;
         public ICorePlaybackEngine Engine => null!;
+        public string? SnapshotDirectory { get; set; }
 
         public double LastRelativeSeekOffset { get; private set; }
         public int SeekRelativeCallCount { get; private set; }
@@ -474,5 +475,58 @@ public class MainViewModelTests
         vm.CloseMoreMenu();
         Assert.False(vm.IsMoreMenuOpen);
         Assert.True(vm.IsOptionsRootPage);
+    }
+
+    [Fact]
+    public void CycleSeekStep_UpdatesSeekStepIntervalAndAppliesToSeekForward()
+    {
+        var playback = new FakePlaybackService();
+        var storage = new FakeStorageService();
+        using var vm = new MainViewModel(playback, storage);
+
+        Assert.Equal(5, vm.SeekStepSeconds);
+        Assert.Equal("5s", vm.SeekStepDisplay);
+
+        vm.CycleSeekStep();
+        Assert.Equal(10, vm.SeekStepSeconds);
+        Assert.Equal("10s", vm.SeekStepDisplay);
+
+        vm.SeekForward5();
+        Assert.Equal(10, playback.LastRelativeSeekOffset);
+        Assert.Equal("+10 seconds", vm.SkipForwardText);
+    }
+
+    [Fact]
+    public void ToggleAutoResume_TogglesAndPersists()
+    {
+        var playback = new FakePlaybackService();
+        var storage = new FakeStorageService();
+        using var vm = new MainViewModel(playback, storage);
+
+        Assert.True(vm.AutoResume);
+        Assert.Equal("Enabled", vm.AutoResumeStatusText);
+
+        vm.ToggleAutoResume();
+        Assert.False(vm.AutoResume);
+        Assert.Equal("Disabled", vm.AutoResumeStatusText);
+
+        vm.ToggleAutoResume();
+        Assert.True(vm.AutoResume);
+        Assert.Equal("Enabled", vm.AutoResumeStatusText);
+    }
+
+    [Fact]
+    public void SetSnapshotDirectory_UpdatesDirectoryAndPlaybackEngine()
+    {
+        var playback = new FakePlaybackService();
+        var storage = new FakeStorageService();
+        using var vm = new MainViewModel(playback, storage);
+
+        var customPath = @"C:\CustomSnaps";
+        vm.SetSnapshotDirectory(customPath);
+
+        Assert.Equal(customPath, vm.SnapshotDirectory);
+        Assert.Equal(customPath, playback.SnapshotDirectory);
+        Assert.Equal(customPath, vm.SnapshotDirectoryDisplay);
     }
 }

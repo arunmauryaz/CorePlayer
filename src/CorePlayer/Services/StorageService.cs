@@ -23,6 +23,8 @@ public class PlayerSettings
     public int RepeatMode { get; set; } = 0; // 0 = Off, 1 = Repeat All, 2 = Repeat One
     public bool AutoResume { get; set; } = true;
     public bool AutoPlayNextInFolder { get; set; } = true;
+    public string? SnapshotDirectory { get; set; }
+    public int SeekStepSeconds { get; set; } = 5;
 }
 
 public class StorageService : IStorageService

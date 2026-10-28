@@ -27,6 +27,7 @@ public interface IPlaybackService
     VideoRotation Rotation { get; }
     IReadOnlyList<TrackInfo> AudioTracks { get; }
     IReadOnlyList<TrackInfo> SubtitleTracks { get; }
+    string? SnapshotDirectory { get; set; }
 
     event EventHandler? PlaybackStateChanged;
     event EventHandler? PositionChanged;
@@ -105,6 +106,11 @@ public class MpvPlaybackService : IPlaybackService, ICorePlaybackEngine
     public VideoRotation Rotation => _engine.Rotation;
     public IReadOnlyList<TrackInfo> AudioTracks => _engine.AudioTracks;
     public IReadOnlyList<TrackInfo> SubtitleTracks => _engine.SubtitleTracks;
+    public string? SnapshotDirectory
+    {
+        get => _engine.SnapshotDirectory;
+        set => _engine.SnapshotDirectory = value;
+    }
 
     public event EventHandler? PlaybackStateChanged;
     public event EventHandler? PositionChanged;

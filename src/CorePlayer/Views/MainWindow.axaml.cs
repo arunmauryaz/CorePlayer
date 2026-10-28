@@ -52,6 +52,18 @@ public partial class MainWindow : Window
         AddHandler(DragDrop.DragEnterEvent, OnDragEnter);
         AddHandler(DragDrop.DragLeaveEvent, OnDragLeave);
         AddHandler(InputElement.PointerMovedEvent, OnWindowPointerMoved, RoutingStrategies.Tunnel);
+        AddHandler(InputElement.KeyDownEvent, OnPreviewKeyDown, RoutingStrategies.Tunnel);
+        Activated += OnWindowActivated;
+
+        TimelineSlider.AddHandler(InputElement.PointerPressedEvent, OnTimelinePointerPressed, RoutingStrategies.Tunnel);
+        TimelineSlider.AddHandler(InputElement.PointerReleasedEvent, OnTimelinePointerReleased, RoutingStrategies.Tunnel);
+        TimelineSlider.AddHandler(InputElement.PointerCaptureLostEvent, (s, e) =>
+        {
+            if (ViewModel != null)
+            {
+                ViewModel.IsScrubbing = false;
+            }
+        }, RoutingStrategies.Tunnel);
 
         VolumeSlider.AddHandler(InputElement.PointerPressedEvent, OnVolumeSliderPointerPressed, RoutingStrategies.Tunnel);
         VolumeSlider.AddHandler(InputElement.PointerReleasedEvent, OnVolumeSliderPointerReleased, RoutingStrategies.Tunnel);
@@ -172,6 +184,7 @@ public partial class MainWindow : Window
             _hookedViewModel.PropertyChanged += OnViewModelPropertyChanged;
             UpdateFullscreenState(_hookedViewModel.IsFullscreen);
             UpdateCursorVisibility();
+            ApplyAlwaysOnTop(_hookedViewModel.IsAlwaysOnTop);
         }
     }
 
@@ -182,6 +195,10 @@ public partial class MainWindow : Window
         if (e.PropertyName == nameof(MainViewModel.IsFullscreen))
         {
             UpdateFullscreenState(ViewModel.IsFullscreen);
+        }
+        else if (e.PropertyName == nameof(MainViewModel.IsAlwaysOnTop))
+        {
+            ApplyAlwaysOnTop(ViewModel.IsAlwaysOnTop);
         }
         else if (e.PropertyName == nameof(MainViewModel.IsControlsVisible) || e.PropertyName == nameof(MainViewModel.IsPlaying))
         {
@@ -397,6 +414,55 @@ public partial class MainWindow : Window
     {
         _canvasClickTimer?.Stop();
         ViewModel?.ToggleFullscreen();
+    }
+
+    private void OnTimelinePointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (ViewModel != null)
+        {
+            ViewModel.IsScrubbing = true;
+        }
+    }
+
+    private void OnTimelinePointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (ViewModel != null)
+        {
+            ViewModel.IsScrubbing = false;
+            ViewModel.SeekTo(TimelineSlider.Value);
+        }
+    }
+
+    private void OnPreviewKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (FocusManager?.GetFocusedElement() is TextBox) return;
+
+        if (e.Key == Key.Space || e.Key == Key.Enter)
+        {
+            ViewModel?.TogglePlayPause();
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == Key.Left)
+        {
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+                ViewModel?.PlayPreviousTrack();
+            else
+                ViewModel?.SeekBackward5();
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == Key.Right)
+        {
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+                ViewModel?.PlayNextTrack();
+            else
+                ViewModel?.SeekForward5();
+            e.Handled = true;
+            return;
+        }
     }
 
     protected override void OnKeyDown(KeyEventArgs e)
@@ -632,9 +698,98 @@ public partial class MainWindow : Window
         ViewModel?.ShowToast("CORE PLAYER v1.0 • Liquid Glass Edition");
     }
 
+    [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+    private static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
+    private static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2);
+    private const uint SWP_NOMOVE = 0x0002;
+    private const uint SWP_NOSIZE = 0x0001;
+    private const uint SWP_SHOWWINDOW = 0x0040;
+
+    private void ApplyAlwaysOnTop(bool isAlwaysOnTop)
+    {
+        Topmost = isAlwaysOnTop;
+        if (OperatingSystem.IsWindows())
+        {
+            try
+            {
+                var handle = TryGetPlatformHandle()?.Handle;
+                if (handle.HasValue && handle.Value != IntPtr.Zero)
+                {
+                    var target = isAlwaysOnTop ? HWND_TOPMOST : HWND_NOTOPMOST;
+                    SetWindowPos(handle.Value, target, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+                }
+            }
+            catch
+            {
+                // Best effort native topmost enforcement
+            }
+        }
+    }
+
+    private void OnWindowActivated(object? sender, EventArgs e)
+    {
+        if (ViewModel != null && ViewModel.IsAlwaysOnTop)
+        {
+            ApplyAlwaysOnTop(true);
+        }
+    }
+
+    private async void OnChangeSnapshotFolderClick(object? sender, RoutedEventArgs e)
+    {
+        if (ViewModel == null) return;
+        try
+        {
+            var folders = await StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+            {
+                Title = "Select Folder for Video Snapshots",
+                AllowMultiple = false
+            });
+
+            if (folders != null && folders.Count > 0)
+            {
+                var path = folders[0].Path.LocalPath;
+                ViewModel.SetSnapshotDirectory(path);
+            }
+        }
+        catch (Exception ex)
+        {
+            ViewModel.ShowToast($"Failed to select folder: {ex.Message}");
+        }
+    }
+
+    private void OnOpenSnapshotFolderClick(object? sender, RoutedEventArgs e)
+    {
+        var folder = ViewModel?.SnapshotDirectory;
+        if (string.IsNullOrWhiteSpace(folder) || !Directory.Exists(folder))
+        {
+            folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "CorePlayer_Snapshots");
+        }
+
+        if (!Directory.Exists(folder))
+        {
+            Directory.CreateDirectory(folder);
+        }
+
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = folder,
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            ViewModel?.ShowToast($"Could not open folder: {ex.Message}");
+        }
+    }
+
     private void OnMinimizeClick(object? sender, RoutedEventArgs e)
     {
         WindowState = WindowState.Minimized;
+        Focus();
     }
 
     private void OnMaximizeClick(object? sender, RoutedEventArgs e)

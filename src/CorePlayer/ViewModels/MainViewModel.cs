@@ -229,6 +229,40 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     public double ShuffleOpacity => Shuffle ? 1.0 : 0.45;
     public double RepeatOpacity => RepeatMode > 0 ? 1.0 : 0.45;
 
+    // Settings & Preferences
+    [ObservableProperty]
+    private string? _snapshotDirectory;
+
+    [ObservableProperty]
+    private bool _autoResume = true;
+
+    [ObservableProperty]
+    private int _seekStepSeconds = 5;
+
+    public bool IsScrubbing { get; set; }
+
+    public string SeekStepDisplay => $"{SeekStepSeconds}s";
+    public string AutoResumeStatusText => AutoResume ? "Enabled" : "Disabled";
+    public string SnapshotDirectoryDisplay => string.IsNullOrWhiteSpace(SnapshotDirectory)
+        ? "Default (Pictures/CorePlayer_Snapshots)"
+        : SnapshotDirectory;
+
+    partial void OnSnapshotDirectoryChanged(string? value)
+    {
+        _playback.SnapshotDirectory = value;
+        OnPropertyChanged(nameof(SnapshotDirectoryDisplay));
+    }
+
+    partial void OnAutoResumeChanged(bool value)
+    {
+        OnPropertyChanged(nameof(AutoResumeStatusText));
+    }
+
+    partial void OnSeekStepSecondsChanged(int value)
+    {
+        OnPropertyChanged(nameof(SeekStepDisplay));
+    }
+
     // Smart Auto-Resume Prompt
     [ObservableProperty]
     private bool _showResumePrompt;
@@ -319,6 +353,10 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         _speedText = $"{_speed:0.##}x";
         _shuffle = settings.Shuffle;
         _repeatMode = settings.RepeatMode;
+        _autoResume = settings.AutoResume;
+        _seekStepSeconds = settings.SeekStepSeconds > 0 ? settings.SeekStepSeconds : 5;
+        _snapshotDirectory = settings.SnapshotDirectory ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "CorePlayer_Snapshots");
+        _playback.SnapshotDirectory = _snapshotDirectory;
 
         _playback.PlaybackStateChanged += OnPlaybackStateChanged;
         _playback.PositionChanged += OnPositionChanged;
@@ -384,6 +422,8 @@ public partial class MainViewModel : ViewModelBase, IDisposable
 
     private void OnPositionChanged(object? sender, EventArgs e)
     {
+        if (IsScrubbing) return;
+
         _isUpdatingPositionFromPlayback = true;
         try
         {
@@ -434,7 +474,7 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         CurrentStats = _playback.GetCurrentStatistics();
 
         // Automatically start the video from the place it was last played
-        if (!string.IsNullOrWhiteSpace(_playback.CurrentFilePath))
+        if (AutoResume && !string.IsNullOrWhiteSpace(_playback.CurrentFilePath))
         {
             var savedPos = _storage.GetPlaybackPosition(_playback.CurrentFilePath);
             if (savedPos.HasValue && savedPos.Value > 5 && (_playback.Duration.TotalSeconds <= 10 || savedPos.Value < _playback.Duration.TotalSeconds - 10))
@@ -703,16 +743,49 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     public void SeekRelative(double offsetSeconds) => SeekRelativeWithHud(offsetSeconds);
 
     [RelayCommand]
-    public void SeekForward5() => SeekRelativeWithHud(5);
+    public void SeekForward5() => SeekRelativeWithHud(SeekStepSeconds);
 
     [RelayCommand]
-    public void SeekBackward5() => SeekRelativeWithHud(-5);
+    public void SeekBackward5() => SeekRelativeWithHud(-SeekStepSeconds);
 
     [RelayCommand]
-    public void SeekForward10() => SeekRelativeWithHud(10);
+    public void SeekForward10() => SeekRelativeWithHud(SeekStepSeconds * 2);
 
     [RelayCommand]
-    public void SeekBackward10() => SeekRelativeWithHud(-10);
+    public void SeekBackward10() => SeekRelativeWithHud(-SeekStepSeconds * 2);
+
+    [RelayCommand]
+    public void ToggleAutoResume()
+    {
+        AutoResume = !AutoResume;
+        ShowToast(AutoResume ? "Auto-Resume: Enabled" : "Auto-Resume: Disabled");
+        SaveCurrentSettings();
+    }
+
+    [RelayCommand]
+    public void CycleSeekStep()
+    {
+        SeekStepSeconds = SeekStepSeconds switch
+        {
+            5 => 10,
+            10 => 15,
+            15 => 30,
+            _ => 5
+        };
+        ShowToast($"Seek Step: {SeekStepSeconds}s");
+        SaveCurrentSettings();
+    }
+
+    public void SetSnapshotDirectory(string path)
+    {
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            SnapshotDirectory = path;
+            _playback.SnapshotDirectory = path;
+            ShowToast("Snapshot folder updated");
+            SaveCurrentSettings();
+        }
+    }
 
     partial void OnVolumeChanged(int value)
     {
@@ -1220,6 +1293,21 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         SelectTrack(nextTrack);
     }
 
+    public void SaveCurrentSettings()
+    {
+        var settings = new PlayerSettings
+        {
+            Volume = Volume,
+            Speed = Speed,
+            Shuffle = Shuffle,
+            RepeatMode = RepeatMode,
+            AutoResume = AutoResume,
+            SeekStepSeconds = SeekStepSeconds,
+            SnapshotDirectory = SnapshotDirectory
+        };
+        _storage.SaveSettings(settings);
+    }
+
     public void Dispose()
     {
         if (_isDisposed) return;
@@ -1230,14 +1318,7 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         _toastTimer.Stop();
         _skipHudTimer.Stop();
 
-        var settings = new PlayerSettings
-        {
-            Volume = Volume,
-            Speed = Speed,
-            Shuffle = Shuffle,
-            RepeatMode = RepeatMode
-        };
-        _storage.SaveSettings(settings);
+        SaveCurrentSettings();
 
         if (_playback is IDisposable d)
         {

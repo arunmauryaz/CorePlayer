@@ -23,6 +23,7 @@ public interface ICorePlaybackEngine : IDisposable
     VideoRotation Rotation { get; }
     IReadOnlyList<TrackInfo> AudioTracks { get; }
     IReadOnlyList<TrackInfo> SubtitleTracks { get; }
+    string? SnapshotDirectory { get; set; }
 
     event EventHandler? PlaybackStateChanged;
     event EventHandler? PositionChanged;

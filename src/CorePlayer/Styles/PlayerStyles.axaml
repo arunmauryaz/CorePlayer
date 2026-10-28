@@ -39,8 +39,14 @@
         <Setter Property="Foreground" Value="{StaticResource LiquidGlassHoverBrush}" />
     </Style>
 
+    <!-- Prevent any button from capturing keyboard focus so Spacebar/Enter always triggers playback control -->
+    <Style Selector="Button">
+        <Setter Property="Focusable" Value="False" />
+    </Style>
+
     <!-- Flat Sleek Button (Modern Hitbox & Hover) -->
     <Style Selector="Button.iris-btn">
+        <Setter Property="Focusable" Value="False" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{StaticResource LiquidGlassBrush}" />
         <Setter Property="BorderThickness" Value="0" />
@@ -67,6 +73,7 @@
 
     <!-- Pin Button with Tilted (45deg unpinned) vs Upright (0deg pinned) -->
     <Style Selector="Button.iris-pin-btn">
+        <Setter Property="Focusable" Value="False" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{StaticResource LiquidGlassBrush}" />
         <Setter Property="BorderThickness" Value="0" />
@@ -108,6 +115,7 @@
 
     <!-- Play / Pause Button (Clean Transparent Style matching all other buttons) -->
     <Style Selector="Button.iris-play-btn">
+        <Setter Property="Focusable" Value="False" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{StaticResource LiquidGlassBrush}" />
         <Setter Property="BorderThickness" Value="0" />
@@ -134,6 +142,7 @@
 
     <!-- Sleek Text Button (e.g. 1.0X Speed, Clean Transparent Style) -->
     <Style Selector="Button.iris-text-btn">
+        <Setter Property="Focusable" Value="False" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{StaticResource LiquidGlassBrush}" />
         <Setter Property="BorderThickness" Value="0" />
@@ -160,6 +169,7 @@
 
     <!-- Sleek Menu Item Button (Popover Items) -->
     <Style Selector="Button.iris-menu-item">
+        <Setter Property="Focusable" Value="False" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="#DDDDDF" />
         <Setter Property="BorderThickness" Value="0" />
@@ -185,6 +195,7 @@
 
     <!-- Modern Side Panel Drawer Item Button (Spacious, prominent, divided with thin line) -->
     <Style Selector="Button.iris-drawer-item">
+        <Setter Property="Focusable" Value="False" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="#EEEEEE" />
         <Setter Property="BorderThickness" Value="0" />
@@ -214,6 +225,7 @@
 
     <!-- Drawer Dedicated Back Button (Auto sizing, no 34px fixed limit) -->
     <Style Selector="Button.iris-drawer-back-btn">
+        <Setter Property="Focusable" Value="False" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="#CBD5E1" />
         <Setter Property="BorderThickness" Value="0" />
@@ -241,6 +253,7 @@
 
     <!-- Drawer Dedicated Close Button -->
     <Style Selector="Button.iris-drawer-close-btn">
+        <Setter Property="Focusable" Value="False" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="#94A3B8" />
         <Setter Property="BorderThickness" Value="0" />

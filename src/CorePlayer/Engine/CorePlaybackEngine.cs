@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using Avalonia.Threading;
@@ -40,6 +41,10 @@ public class CorePlaybackEngine : ICorePlaybackEngine
     private bool _eofHandled;
     private int _pollTicks;
 
+    private double? _pendingSeekTarget;
+    private long _suppressPositionUpdateUntilTicks;
+    private string? _snapshotDirectory;
+
     public MpvContext Context => _context;
     public bool IsPlaying => _isPlaying;
     public TimeSpan Position => _position;
@@ -66,6 +71,11 @@ public class CorePlaybackEngine : ICorePlaybackEngine
     public VideoRotation Rotation => _rotation;
     public IReadOnlyList<TrackInfo> AudioTracks => _audioTracks;
     public IReadOnlyList<TrackInfo> SubtitleTracks => _subtitleTracks;
+    public string? SnapshotDirectory
+    {
+        get => _snapshotDirectory;
+        set => _snapshotDirectory = value;
+    }
 
     public event EventHandler? PlaybackStateChanged;
     public event EventHandler? PositionChanged;
@@ -170,11 +180,16 @@ public class CorePlaybackEngine : ICorePlaybackEngine
 
             if (timePos.HasValue)
             {
-                var newPos = TimeSpan.FromSeconds(Math.Max(0, timePos.Value));
-                if (Math.Abs((newPos - _position).TotalMilliseconds) >= 15)
+                var nowTicks = Stopwatch.GetTimestamp();
+                if (nowTicks >= _suppressPositionUpdateUntilTicks)
                 {
-                    _position = newPos;
-                    PositionChanged?.Invoke(this, EventArgs.Empty);
+                    _pendingSeekTarget = null;
+                    var newPos = TimeSpan.FromSeconds(Math.Max(0, timePos.Value));
+                    if (Math.Abs((newPos - _position).TotalMilliseconds) >= 15)
+                    {
+                        _position = newPos;
+                        PositionChanged?.Invoke(this, EventArgs.Empty);
+                    }
                 }
             }
 
@@ -341,6 +356,9 @@ public class CorePlaybackEngine : ICorePlaybackEngine
         if (_duration.TotalSeconds > 0 && seconds > _duration.TotalSeconds)
             seconds = _duration.TotalSeconds;
 
+        _pendingSeekTarget = seconds;
+        _suppressPositionUpdateUntilTicks = Stopwatch.GetTimestamp() + (long)(Stopwatch.Frequency * 0.40);
+
         var secStr = seconds.ToString(CultureInfo.InvariantCulture);
         try
         {
@@ -360,6 +378,9 @@ public class CorePlaybackEngine : ICorePlaybackEngine
         if (_duration.TotalSeconds > 0 && seconds > _duration.TotalSeconds)
             seconds = _duration.TotalSeconds;
 
+        _pendingSeekTarget = seconds;
+        _suppressPositionUpdateUntilTicks = Stopwatch.GetTimestamp() + (long)(Stopwatch.Frequency * 0.40);
+
         var secStr = seconds.ToString(CultureInfo.InvariantCulture);
         try
         {
@@ -375,7 +396,10 @@ public class CorePlaybackEngine : ICorePlaybackEngine
 
     public void SeekRelative(double offsetSeconds)
     {
-        var target = _position.TotalSeconds + offsetSeconds;
+        var baseSeconds = (_suppressPositionUpdateUntilTicks > Stopwatch.GetTimestamp() && _pendingSeekTarget.HasValue)
+            ? _pendingSeekTarget.Value
+            : _position.TotalSeconds;
+        var target = baseSeconds + offsetSeconds;
         ExactSeek(target);
     }
 
@@ -536,8 +560,9 @@ public class CorePlaybackEngine : ICorePlaybackEngine
 
     public string TakeSnapshot(bool includeSubtitles = true)
     {
-        var pictures = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
-        var folder = Path.Combine(pictures, "CorePlayer_Snapshots");
+        var folder = !string.IsNullOrWhiteSpace(_snapshotDirectory) && Directory.Exists(_snapshotDirectory)
+            ? _snapshotDirectory
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "CorePlayer_Snapshots");
         if (!Directory.Exists(folder))
         {
             Directory.CreateDirectory(folder);
