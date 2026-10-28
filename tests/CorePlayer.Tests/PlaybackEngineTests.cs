@@ -143,41 +143,4 @@ public class PlaybackEngineTests
         engine.ToggleNightMode();
         Assert.False(engine.IsNightModeActive);
     }
-
-    [Fact]
-    public void TestThumbnailGeneration()
-    {
-        var testVideo = @"d:\CORE PLAYER\test_video.mp4";
-        if (!File.Exists(testVideo)) return;
-
-        using var ctx = new MpvContext();
-        ctx.Option["audio"].Set("no");
-        ctx.Option["sub"].Set("no");
-        ctx.Option["sid"].Set("no");
-        ctx.Option["aid"].Set("no");
-        ctx.Option["keep-open"].Set("yes");
-        ctx.Option["pause"].Set("yes");
-        ctx.Option["vo"].Set("image");
-        ctx.Option["vf"].Set("scale=256:-1");
-
-        ctx.RunCommand(default, "loadfile", testVideo);
-
-        for (int i = 0; i < 50; i++)
-        {
-            System.Threading.Thread.Sleep(50);
-            try
-            {
-                var d = ctx.Duration.Get();
-                if (d.HasValue && d.Value > 0) break;
-            }
-            catch { }
-        }
-
-        var f = Path.Combine(AppContext.BaseDirectory, "thumb_bmp_test.jpg");
-        ctx.RunCommand(default, "seek", "1", "absolute+keyframes");
-        ctx.RunCommand(default, "screenshot-to-file", f, "video");
-        Assert.True(File.Exists(f));
-        Assert.True(new FileInfo(f).Length > 0);
-        File.Delete(f);
-    }
 }

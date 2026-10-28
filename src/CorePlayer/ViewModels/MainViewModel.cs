@@ -115,6 +115,14 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     public bool IsAudioTabSelected => SelectedTracksTab == 0;
     public bool IsSubtitlesTabSelected => SelectedTracksTab == 1;
 
+    partial void OnIsControlsVisibleChanged(bool value)
+    {
+        if (!value)
+        {
+            HideHoverPreview();
+        }
+    }
+
     partial void OnSelectedTracksTabChanged(int value)
     {
         OnPropertyChanged(nameof(IsAudioTabSelected));
@@ -398,6 +406,17 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         _playback.MediaEnded += OnMediaEnded;
         _playback.TracksChanged += OnTracksChanged;
         _playback.StatisticsUpdated += OnStatisticsUpdated;
+
+        _thumbnailService.ThumbnailReady += (s, e) =>
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (IsHoverPreviewVisible && _currentHoverSeconds >= 0 && Math.Abs(_currentHoverSeconds - e.Seconds) <= 1.5)
+                {
+                    HoverPreviewBitmap = e.Bitmap;
+                }
+            });
+        };
 
         _controlsTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2.0) };
         _controlsTimer.Tick += (_, _) =>
@@ -738,6 +757,8 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         ShowControls();
     }
 
+    private double _currentHoverSeconds = -1;
+
     public void UpdateHoverPreview(double hoverSeconds, double cursorXOnSlider, double sliderWidth)
     {
         if (!EnableHoverPreview || !HasMedia || DurationSeconds <= 0)
@@ -747,6 +768,7 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         }
 
         hoverSeconds = Math.Clamp(hoverSeconds, 0, DurationSeconds);
+        _currentHoverSeconds = hoverSeconds;
         HoverPreviewTime = FormatTime(TimeSpan.FromSeconds(hoverSeconds));
         HoverPreviewX = cursorXOnSlider;
         IsHoverPreviewVisible = true;
@@ -756,11 +778,16 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         {
             HoverPreviewBitmap = thumb;
         }
+        else
+        {
+            _ = _thumbnailService.GetThumbnailAsync(hoverSeconds);
+        }
     }
 
     public void HideHoverPreview()
     {
         IsHoverPreviewVisible = false;
+        _currentHoverSeconds = -1;
     }
 
     public void SeekRelativeWithHud(double offsetSeconds)

@@ -20,6 +20,7 @@ public partial class App : Application
         {
             var window = new MainWindow();
             desktop.MainWindow = window;
+            desktop.Exit += (_, _) => CorePlayer.Services.ThumbnailService.CleanupAllTempDirs();
             var vm = window.DataContext as MainViewModel;
 
             if (desktop.Args != null && desktop.Args.Length > 0 && !string.IsNullOrWhiteSpace(desktop.Args[0]))

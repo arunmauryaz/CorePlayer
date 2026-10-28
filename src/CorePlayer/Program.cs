@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace CorePlayer;
 
-sealed class Program
+public sealed class Program
 {
     [STAThread]
     public static void Main(string[] args)

@@ -1,13 +1,11 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
-using CorePlayer.Engine;
 using HanumanInstitute.LibMpv;
 
 namespace CorePlayer.Services;
@@ -19,6 +17,7 @@ public interface IThumbnailService : IDisposable
     Task<Bitmap?> GetThumbnailAsync(double seconds, CancellationToken cancellationToken = default);
     int CachedThumbnailCount { get; }
     void Clear();
+    event EventHandler<(double Seconds, Bitmap Bitmap)>? ThumbnailReady;
 }
 
 public class ThumbnailService : IThumbnailService
@@ -28,19 +27,43 @@ public class ThumbnailService : IThumbnailService
     private double _duration;
     private string? _tempDir;
     private CancellationTokenSource? _cts;
-    private Task? _backgroundTask;
+    private Task? _workerTask;
+    private Channel<double>? _channel;
 
-    // Timestamp (seconds) -> File path on disk
-    private readonly ConcurrentDictionary<double, string> _thumbnailPaths = new();
-    
-    // In-memory cache for fast display: Timestamp (seconds) -> Avalonia Bitmap
-    private readonly Dictionary<double, Bitmap> _bitmapCache = new();
+    // LRU in-memory cache: Rounded second -> Avalonia Bitmap
+    private readonly Dictionary<int, Bitmap> _bitmapCache = new();
+    private readonly LinkedList<int> _lruOrder = new();
+    private const int MaxCacheSize = 30;
 
-    public int CachedThumbnailCount => _thumbnailPaths.Count;
+    public event EventHandler<(double Seconds, Bitmap Bitmap)>? ThumbnailReady;
+
+    public int CachedThumbnailCount
+    {
+        get
+        {
+            lock (_syncLock)
+            {
+                return _bitmapCache.Count;
+            }
+        }
+    }
 
     public ThumbnailService()
     {
         CleanupOldTempDirs();
+    }
+
+    public static void CleanupAllTempDirs()
+    {
+        try
+        {
+            var baseDir = Path.Combine(Path.GetTempPath(), "CorePlayer_Thumbs");
+            if (Directory.Exists(baseDir))
+            {
+                Directory.Delete(baseDir, true);
+            }
+        }
+        catch { }
     }
 
     private static void CleanupOldTempDirs()
@@ -55,8 +78,7 @@ public class ThumbnailService : IThumbnailService
                 {
                     try
                     {
-                        // Clean up temp directories older than 1 day
-                        if (DateTime.Now - subDir.CreationTime > TimeSpan.FromDays(1))
+                        if (DateTime.Now - subDir.CreationTime > TimeSpan.FromHours(2))
                         {
                             subDir.Delete(true);
                         }
@@ -90,13 +112,20 @@ public class ThumbnailService : IThumbnailService
             return;
         }
 
+        _channel = Channel.CreateBounded<double>(new BoundedChannelOptions(1)
+        {
+            FullMode = BoundedChannelFullMode.DropOldest
+        });
+
         _cts = new CancellationTokenSource();
         var ct = _cts.Token;
+        var reader = _channel.Reader;
+        var currentTempDir = _tempDir;
 
-        _backgroundTask = Task.Run(() => GenerateThumbnailsWorker(filePath, duration, _tempDir, ct), ct);
+        _workerTask = Task.Run(() => WorkerLoop(filePath, currentTempDir, reader, ct), ct);
     }
 
-    private void GenerateThumbnailsWorker(string filePath, double duration, string tempDir, CancellationToken ct)
+    private void WorkerLoop(string filePath, string tempDir, ChannelReader<double> reader, CancellationToken ct)
     {
         MpvContext? ctx = null;
         try
@@ -109,8 +138,11 @@ public class ThumbnailService : IThumbnailService
             ctx.Option["keep-open"].Set("yes");
             ctx.Option["pause"].Set("yes");
             ctx.Option["vo"].Set("image");
+            try { ctx.Option["vo-image-outdir"].Set(tempDir); } catch { }
             ctx.Option["vf"].Set("scale=280:-1");
             ctx.Option["hwdec"].Set("auto-safe");
+            ctx.Option["hr-seek"].Set("yes");
+            ctx.Option["hr-seek-framedrop"].Set("no");
 
             ctx.RunCommand(default, "loadfile", filePath);
 
@@ -127,42 +159,95 @@ public class ThumbnailService : IThumbnailService
                 catch { }
             }
 
-            if (ct.IsCancellationRequested) return;
+            var thumbFile = Path.Combine(tempDir, "preview_frame.jpg");
 
-            // Adaptive step size: ~60 to 100 samples across duration, bounded between 2s and 20s
-            double step = Math.Max(2.0, Math.Min(20.0, duration / 80.0));
-            int index = 0;
-
-            for (double pos = 0; pos <= duration; pos += step)
+            while (!ct.IsCancellationRequested)
             {
-                if (ct.IsCancellationRequested) return;
-
-                var thumbFile = Path.Combine(tempDir, $"thumb_{index++}_{Math.Round(pos)}.jpg");
+                double targetSec;
                 try
                 {
-                    var posStr = pos.ToString(CultureInfo.InvariantCulture);
-                    ctx.RunCommand(default, "seek", posStr, "absolute+keyframes");
+                    // Asynchronously wait for the next hover request
+                    var readTask = reader.ReadAsync(ct).AsTask();
+                    readTask.Wait(ct);
+                    targetSec = readTask.Result;
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+                catch (AggregateException ae) when (ae.InnerException is OperationCanceledException)
+                {
+                    break;
+                }
+
+                if (ct.IsCancellationRequested) break;
+
+                int key = (int)Math.Round(targetSec);
+                Bitmap? existingBmp = null;
+                lock (_syncLock)
+                {
+                    if (_bitmapCache.TryGetValue(key, out existingBmp))
+                    {
+                        // Already in cache
+                    }
+                }
+
+                if (existingBmp != null)
+                {
+                    ThumbnailReady?.Invoke(this, (targetSec, existingBmp));
+                    continue;
+                }
+
+                try
+                {
+                    var secStr = targetSec.ToString("0.00", CultureInfo.InvariantCulture);
+                    // Use exact seek to retrieve the precise frame of that exact scene
+                    ctx.RunCommand(default, "seek", secStr, "absolute+exact");
                     ctx.RunCommand(default, "screenshot-to-file", thumbFile, "video");
 
                     if (File.Exists(thumbFile) && new FileInfo(thumbFile).Length > 0)
                     {
-                        _thumbnailPaths[pos] = thumbFile;
+                        var bytes = File.ReadAllBytes(thumbFile);
+                        // Immediately delete the temp file from disk so zero disk storage is wasted
+                        try { File.Delete(thumbFile); } catch { }
+
+                        using var ms = new MemoryStream(bytes);
+                        var bmp = new Bitmap(ms);
+
+                        lock (_syncLock)
+                        {
+                            // Maintain bounded LRU in-memory cache (max 30 small bitmaps ~5MB RAM)
+                            if (_bitmapCache.Count >= MaxCacheSize)
+                            {
+                                var oldest = _lruOrder.First?.Value;
+                                if (oldest.HasValue)
+                                {
+                                    _lruOrder.RemoveFirst();
+                                    if (_bitmapCache.Remove(oldest.Value, out var evicted))
+                                    {
+                                        try { evicted.Dispose(); } catch { }
+                                    }
+                                }
+                            }
+
+                            _bitmapCache[key] = bmp;
+                            _lruOrder.AddLast(key);
+                        }
+
+                        ThumbnailReady?.Invoke(this, (targetSec, bmp));
                     }
                 }
                 catch
                 {
-                    // Frame extraction error on specific position, proceed to next
+                    // Frame extraction error on specific frame, continue
                 }
-
-                // Subtle pause to keep background CPU utilization minimal
-                Thread.Sleep(15);
             }
         }
         catch (Exception ex)
         {
             try
             {
-                File.AppendAllText("crash.log", $"[{DateTime.Now:HH:mm:ss}] Thumbnail worker exception: {ex.Message}\n");
+                File.AppendAllText("crash.log", $"[{DateTime.Now:HH:mm:ss}] Thumbnail worker error: {ex.Message}\n");
             }
             catch { }
         }
@@ -178,51 +263,22 @@ public class ThumbnailService : IThumbnailService
 
     public Bitmap? GetCachedThumbnail(double seconds)
     {
-        if (_thumbnailPaths.IsEmpty) return null;
-
+        int key = (int)Math.Round(seconds);
         lock (_syncLock)
         {
-            double closestPos = -1;
-            double minDiff = double.MaxValue;
-
-            foreach (var pos in _thumbnailPaths.Keys)
+            if (_bitmapCache.TryGetValue(key, out var bmp))
             {
-                var diff = Math.Abs(pos - seconds);
-                if (diff < minDiff)
-                {
-                    minDiff = diff;
-                    closestPos = pos;
-                }
+                _lruOrder.Remove(key);
+                _lruOrder.AddLast(key);
+                return bmp;
             }
 
-            if (closestPos >= 0 && _thumbnailPaths.TryGetValue(closestPos, out var path) && File.Exists(path))
+            // Return frame within 1-second proximity if available while exact frame loads
+            foreach (var offset in new[] { -1, 1 })
             {
-                if (_bitmapCache.TryGetValue(closestPos, out var cachedBmp))
+                if (_bitmapCache.TryGetValue(key + offset, out var closeBmp))
                 {
-                    return cachedBmp;
-                }
-
-                try
-                {
-                    using var stream = File.OpenRead(path);
-                    var bmp = new Bitmap(stream);
-
-                    // Maintain max 120 bitmaps in memory cache
-                    if (_bitmapCache.Count > 120)
-                    {
-                        foreach (var oldBmp in _bitmapCache.Values)
-                        {
-                            try { oldBmp.Dispose(); } catch { }
-                        }
-                        _bitmapCache.Clear();
-                    }
-
-                    _bitmapCache[closestPos] = bmp;
-                    return bmp;
-                }
-                catch
-                {
-                    return null;
+                    return closeBmp;
                 }
             }
         }
@@ -233,7 +289,14 @@ public class ThumbnailService : IThumbnailService
     public Task<Bitmap?> GetThumbnailAsync(double seconds, CancellationToken cancellationToken = default)
     {
         var cached = GetCachedThumbnail(seconds);
-        return Task.FromResult(cached);
+        if (cached != null)
+        {
+            return Task.FromResult<Bitmap?>(cached);
+        }
+
+        // Send to worker channel (drops older pending requests automatically)
+        _channel?.Writer.TryWrite(seconds);
+        return Task.FromResult<Bitmap?>(null);
     }
 
     public void Clear()
@@ -253,7 +316,7 @@ public class ThumbnailService : IThumbnailService
                 try { bmp.Dispose(); } catch { }
             }
             _bitmapCache.Clear();
-            _thumbnailPaths.Clear();
+            _lruOrder.Clear();
         }
 
         if (!string.IsNullOrWhiteSpace(_tempDir) && Directory.Exists(_tempDir))

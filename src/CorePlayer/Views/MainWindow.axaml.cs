@@ -52,8 +52,14 @@ public partial class MainWindow : Window
         AddHandler(DragDrop.DragEnterEvent, OnDragEnter);
         AddHandler(DragDrop.DragLeaveEvent, OnDragLeave);
         AddHandler(InputElement.PointerMovedEvent, OnWindowPointerMoved, RoutingStrategies.Tunnel);
+        AddHandler(InputElement.PointerExitedEvent, OnWindowPointerExited, RoutingStrategies.Tunnel);
         AddHandler(InputElement.KeyDownEvent, OnPreviewKeyDown, RoutingStrategies.Tunnel);
         Activated += OnWindowActivated;
+        Closing += (_, _) =>
+        {
+            ViewModel?.Dispose();
+            ThumbnailService.CleanupAllTempDirs();
+        };
 
         TimelineSlider.AddHandler(InputElement.PointerPressedEvent, OnTimelinePointerPressed, RoutingStrategies.Tunnel);
         TimelineSlider.AddHandler(InputElement.PointerReleasedEvent, OnTimelinePointerReleased, RoutingStrategies.Tunnel);
@@ -371,11 +377,35 @@ public partial class MainWindow : Window
         }
 
         ViewModel?.ShowControls();
+
+        // If hover preview is showing and user is not scrubbing, verify pointer is still over TimelineSlider
+        if (ViewModel != null && ViewModel.IsHoverPreviewVisible && !ViewModel.IsScrubbing)
+        {
+            var sliderPt = e.GetPosition(TimelineSlider);
+            bool isOverSlider = sliderPt.X >= 0 && sliderPt.X <= TimelineSlider.Bounds.Width &&
+                                sliderPt.Y >= -8 && sliderPt.Y <= TimelineSlider.Bounds.Height + 8;
+            if (!isOverSlider)
+            {
+                ViewModel.HideHoverPreview();
+            }
+        }
+    }
+
+    private void OnWindowPointerExited(object? sender, PointerEventArgs e)
+    {
+        if (ViewModel != null && !ViewModel.IsScrubbing)
+        {
+            ViewModel.HideHoverPreview();
+        }
     }
 
     private void OnVideoAreaPointerMoved(object? sender, PointerEventArgs e)
     {
         OnWindowPointerMoved(sender, e);
+        if (ViewModel != null && !ViewModel.IsScrubbing)
+        {
+            ViewModel.HideHoverPreview();
+        }
     }
 
     private void OnVideoAreaPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -471,7 +501,10 @@ public partial class MainWindow : Window
         {
             ViewModel.IsScrubbing = false;
             ViewModel.SeekTo(TimelineSlider.Value);
-            if (!TimelineSlider.IsPointerOver)
+            var pt = e.GetPosition(TimelineSlider);
+            bool isOver = pt.X >= 0 && pt.X <= TimelineSlider.Bounds.Width &&
+                          pt.Y >= -8 && pt.Y <= TimelineSlider.Bounds.Height + 8;
+            if (!isOver)
             {
                 ViewModel.HideHoverPreview();
             }

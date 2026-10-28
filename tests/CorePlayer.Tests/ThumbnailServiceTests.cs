@@ -14,6 +14,14 @@ namespace CorePlayer.Tests;
 
 public class ThumbnailServiceTests
 {
+    static ThumbnailServiceTests()
+    {
+        try
+        {
+            CorePlayer.Program.BuildAvaloniaApp().SetupWithoutStarting();
+        }
+        catch { }
+    }
     private class FakePlaybackService : IPlaybackService
     {
         public bool IsPlaying { get; set; }
@@ -108,6 +116,10 @@ public class ThumbnailServiceTests
         }
 
         public int CachedThumbnailCount => 0;
+
+#pragma warning disable CS0067
+        public event EventHandler<(double Seconds, Bitmap Bitmap)>? ThumbnailReady;
+#pragma warning restore CS0067
 
         public void Clear()
         {
@@ -221,6 +233,9 @@ public class ThumbnailServiceTests
 
         using var service = new ThumbnailService();
         service.SetSource(testVideo, 5.0);
+
+        // Request exact thumbnail for 2.0s
+        service.GetThumbnailAsync(2.0);
 
         // Wait up to 3 seconds for background worker to produce at least 1 thumbnail
         for (int i = 0; i < 30; i++)
