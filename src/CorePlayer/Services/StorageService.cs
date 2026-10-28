@@ -25,6 +25,7 @@ public class PlayerSettings
     public bool AutoPlayNextInFolder { get; set; } = true;
     public string? SnapshotDirectory { get; set; }
     public int SeekStepSeconds { get; set; } = 5;
+    public bool HoverPreview { get; set; } = true;
 }
 
 public class StorageService : IStorageService

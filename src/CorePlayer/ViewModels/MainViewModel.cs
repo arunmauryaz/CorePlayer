@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -17,6 +18,7 @@ public partial class MainViewModel : ViewModelBase, IDisposable
 {
     private readonly IPlaybackService _playback;
     private readonly IStorageService _storage;
+    private readonly IThumbnailService _thumbnailService;
     private readonly DispatcherTimer _controlsTimer;
     private readonly DispatcherTimer _gestureTimer;
     private readonly DispatcherTimer _toastTimer;
@@ -239,13 +241,26 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private int _seekStepSeconds = 5;
 
+    [ObservableProperty]
+    private bool _enableHoverPreview = true;
+
     public bool IsScrubbing { get; set; }
 
     public string SeekStepDisplay => $"{SeekStepSeconds}s";
     public string AutoResumeStatusText => AutoResume ? "Enabled" : "Disabled";
+    public string HoverPreviewStatusText => EnableHoverPreview ? "Enabled" : "Disabled";
     public string SnapshotDirectoryDisplay => string.IsNullOrWhiteSpace(SnapshotDirectory)
         ? "Default (Pictures/CorePlayer_Snapshots)"
         : SnapshotDirectory;
+
+    partial void OnEnableHoverPreviewChanged(bool value)
+    {
+        OnPropertyChanged(nameof(HoverPreviewStatusText));
+        if (!value)
+        {
+            IsHoverPreviewVisible = false;
+        }
+    }
 
     partial void OnSnapshotDirectoryChanged(string? value)
     {
@@ -307,6 +322,19 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private string _toastMessage = string.Empty;
 
+    // Timeline Hover Preview (Netflix / YouTube style)
+    [ObservableProperty]
+    private bool _isHoverPreviewVisible;
+
+    [ObservableProperty]
+    private Bitmap? _hoverPreviewBitmap;
+
+    [ObservableProperty]
+    private string _hoverPreviewTime = "00:00";
+
+    [ObservableProperty]
+    private double _hoverPreviewX;
+
     // Playlist
     public ObservableCollection<MediaItem> Playlist { get; } = [];
 
@@ -336,14 +364,19 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private string _resolution = "Unknown";
 
-    public MainViewModel() : this(new MpvPlaybackService(), new StorageService())
+    public MainViewModel() : this(new MpvPlaybackService(), new StorageService(), new ThumbnailService())
     {
     }
 
-    public MainViewModel(IPlaybackService playback, IStorageService storage)
+    public MainViewModel(IPlaybackService playback, IStorageService storage) : this(playback, storage, new ThumbnailService())
+    {
+    }
+
+    public MainViewModel(IPlaybackService playback, IStorageService storage, IThumbnailService thumbnailService)
     {
         _playback = playback;
         _storage = storage;
+        _thumbnailService = thumbnailService;
 
         var settings = _storage.LoadSettings();
         _volume = settings.Volume;
@@ -354,6 +387,7 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         _shuffle = settings.Shuffle;
         _repeatMode = settings.RepeatMode;
         _autoResume = settings.AutoResume;
+        _enableHoverPreview = settings.HoverPreview;
         _seekStepSeconds = settings.SeekStepSeconds > 0 ? settings.SeekStepSeconds : 5;
         _snapshotDirectory = settings.SnapshotDirectory ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "CorePlayer_Snapshots");
         _playback.SnapshotDirectory = _snapshotDirectory;
@@ -472,6 +506,11 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         AudioCodec = _playback.AudioCodec ?? "AAC/Opus";
         Resolution = _playback.Resolution ?? "1920x1080";
         CurrentStats = _playback.GetCurrentStatistics();
+
+        if (!string.IsNullOrWhiteSpace(_playback.CurrentFilePath))
+        {
+            _thumbnailService.SetSource(_playback.CurrentFilePath, DurationSeconds);
+        }
 
         // Automatically start the video from the place it was last played
         if (AutoResume && !string.IsNullOrWhiteSpace(_playback.CurrentFilePath))
@@ -683,6 +722,9 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     public void Stop()
     {
         _playback.Stop();
+        _thumbnailService.Clear();
+        HoverPreviewBitmap = null;
+        IsHoverPreviewVisible = false;
         PositionSeconds = 0;
         PositionFormatted = "00:00";
         ShowControls();
@@ -694,6 +736,31 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     {
         _playback.Seek(seconds);
         ShowControls();
+    }
+
+    public void UpdateHoverPreview(double hoverSeconds, double cursorXOnSlider, double sliderWidth)
+    {
+        if (!EnableHoverPreview || !HasMedia || DurationSeconds <= 0)
+        {
+            IsHoverPreviewVisible = false;
+            return;
+        }
+
+        hoverSeconds = Math.Clamp(hoverSeconds, 0, DurationSeconds);
+        HoverPreviewTime = FormatTime(TimeSpan.FromSeconds(hoverSeconds));
+        HoverPreviewX = cursorXOnSlider;
+        IsHoverPreviewVisible = true;
+
+        var thumb = _thumbnailService.GetCachedThumbnail(hoverSeconds);
+        if (thumb != null)
+        {
+            HoverPreviewBitmap = thumb;
+        }
+    }
+
+    public void HideHoverPreview()
+    {
+        IsHoverPreviewVisible = false;
     }
 
     public void SeekRelativeWithHud(double offsetSeconds)
@@ -773,6 +840,18 @@ public partial class MainViewModel : ViewModelBase, IDisposable
             _ => 5
         };
         ShowToast($"Seek Step: {SeekStepSeconds}s");
+        SaveCurrentSettings();
+    }
+
+    [RelayCommand]
+    public void ToggleHoverPreview()
+    {
+        EnableHoverPreview = !EnableHoverPreview;
+        if (!EnableHoverPreview)
+        {
+            IsHoverPreviewVisible = false;
+        }
+        ShowToast(EnableHoverPreview ? "Hover Preview: Enabled" : "Hover Preview: Disabled");
         SaveCurrentSettings();
     }
 
@@ -1303,7 +1382,8 @@ public partial class MainViewModel : ViewModelBase, IDisposable
             RepeatMode = RepeatMode,
             AutoResume = AutoResume,
             SeekStepSeconds = SeekStepSeconds,
-            SnapshotDirectory = SnapshotDirectory
+            SnapshotDirectory = SnapshotDirectory,
+            HoverPreview = EnableHoverPreview
         };
         _storage.SaveSettings(settings);
     }
@@ -1319,6 +1399,7 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         _skipHudTimer.Stop();
 
         SaveCurrentSettings();
+        _thumbnailService.Dispose();
 
         if (_playback is IDisposable d)
         {

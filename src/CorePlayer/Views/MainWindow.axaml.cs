@@ -57,11 +57,14 @@ public partial class MainWindow : Window
 
         TimelineSlider.AddHandler(InputElement.PointerPressedEvent, OnTimelinePointerPressed, RoutingStrategies.Tunnel);
         TimelineSlider.AddHandler(InputElement.PointerReleasedEvent, OnTimelinePointerReleased, RoutingStrategies.Tunnel);
+        TimelineSlider.AddHandler(InputElement.PointerMovedEvent, OnTimelinePointerMoved, RoutingStrategies.Tunnel);
+        TimelineSlider.AddHandler(InputElement.PointerExitedEvent, OnTimelinePointerExited, RoutingStrategies.Tunnel);
         TimelineSlider.AddHandler(InputElement.PointerCaptureLostEvent, (s, e) =>
         {
             if (ViewModel != null)
             {
                 ViewModel.IsScrubbing = false;
+                ViewModel.HideHoverPreview();
             }
         }, RoutingStrategies.Tunnel);
 
@@ -416,12 +419,50 @@ public partial class MainWindow : Window
         ViewModel?.ToggleFullscreen();
     }
 
+    private void UpdateHoverCardPosition(Point pt)
+    {
+        if (ViewModel == null || !ViewModel.HasMedia || TimelineSlider.Bounds.Width <= 0) return;
+
+        var ratio = Math.Clamp(pt.X / TimelineSlider.Bounds.Width, 0.0, 1.0);
+        var hoverSeconds = ratio * ViewModel.DurationSeconds;
+
+        var cardWidth = HoverPreviewCard.Bounds.Width > 0 ? HoverPreviewCard.Bounds.Width : 188.0;
+        var sliderOrigin = TimelineSlider.TranslatePoint(new Point(0, 0), this);
+        if (sliderOrigin.HasValue)
+        {
+            var cursorWindowX = sliderOrigin.Value.X + pt.X;
+            var cardLeft = cursorWindowX - (cardWidth / 2.0);
+            var maxLeft = Bounds.Width - cardWidth - 12.0;
+            cardLeft = Math.Clamp(cardLeft, 12.0, Math.Max(12.0, maxLeft));
+
+            HoverPreviewCard.Margin = new Thickness(cardLeft, 0, 0, 52);
+        }
+
+        ViewModel.UpdateHoverPreview(hoverSeconds, pt.X, TimelineSlider.Bounds.Width);
+    }
+
+    private void OnTimelinePointerMoved(object? sender, PointerEventArgs e)
+    {
+        var pt = e.GetPosition(TimelineSlider);
+        UpdateHoverCardPosition(pt);
+    }
+
+    private void OnTimelinePointerExited(object? sender, PointerEventArgs e)
+    {
+        if (ViewModel != null && !ViewModel.IsScrubbing)
+        {
+            ViewModel.HideHoverPreview();
+        }
+    }
+
     private void OnTimelinePointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (ViewModel != null)
         {
             ViewModel.IsScrubbing = true;
         }
+        var pt = e.GetPosition(TimelineSlider);
+        UpdateHoverCardPosition(pt);
     }
 
     private void OnTimelinePointerReleased(object? sender, PointerReleasedEventArgs e)
@@ -430,6 +471,10 @@ public partial class MainWindow : Window
         {
             ViewModel.IsScrubbing = false;
             ViewModel.SeekTo(TimelineSlider.Value);
+            if (!TimelineSlider.IsPointerOver)
+            {
+                ViewModel.HideHoverPreview();
+            }
         }
     }
 

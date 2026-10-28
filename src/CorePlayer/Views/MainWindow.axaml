@@ -324,6 +324,63 @@
             </Grid>
         </Border>
 
+        <!-- ================= LAYER 3.5: TIMELINE HOVER PREVIEW CARD (NETFLIX / YOUTUBE STYLE) ================= -->
+        <Border x:Name="HoverPreviewCard"
+                IsVisible="{Binding IsHoverPreviewVisible}"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Bottom"
+                Margin="0,0,0,52"
+                Width="188"
+                Background="#EE121316"
+                BorderBrush="#40FFFFFF"
+                BorderThickness="1"
+                CornerRadius="8"
+                BoxShadow="0 8 28 #95000000"
+                IsHitTestVisible="False">
+            <Border.Transitions>
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.1" />
+                </Transitions>
+            </Border.Transitions>
+            <Grid RowDefinitions="Auto, Auto" Margin="5,5,5,4">
+                <!-- Thumbnail Image Container with subtle rounded corner clip -->
+                <Border Grid.Row="0"
+                        CornerRadius="5"
+                        ClipToBounds="True"
+                        Background="#08090C"
+                        Height="102"
+                        Width="176"
+                        HorizontalAlignment="Center">
+                    <Panel>
+                        <!-- Fallback / Placeholder film camera icon while thumbnail renders -->
+                        <PathIcon Data="{StaticResource CameraIcon}"
+                                  Width="20" Height="20"
+                                  Foreground="#30FFFFFF"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  IsVisible="{Binding HoverPreviewBitmap, Converter={x:Static ObjectConverters.IsNull}}" />
+
+                        <!-- Video Frame Image -->
+                        <Image Source="{Binding HoverPreviewBitmap}"
+                               Stretch="UniformToFill"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               IsVisible="{Binding HoverPreviewBitmap, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                    </Panel>
+                </Border>
+
+                <!-- Formatted Timestamp Badge -->
+                <TextBlock Grid.Row="1"
+                           Text="{Binding HoverPreviewTime}"
+                           FontSize="11"
+                           FontWeight="SemiBold"
+                           Foreground="#EEEEEE"
+                           FontFamily="{StaticResource MonospaceFont}"
+                           HorizontalAlignment="Center"
+                           Margin="0,4,0,1" />
+            </Grid>
+        </Border>
+
         <!-- ================= LAYER 4: MODERN OPTIONS SIDE PANEL DRAWER (SWIPES FROM RIGHT) ================= -->
         <Border IsVisible="{Binding IsMoreMenuOpen}"
                 HorizontalAlignment="Right"
@@ -574,6 +631,21 @@
                                     </StackPanel>
                                     <Border Grid.Column="2" CornerRadius="4" Padding="8,3" Background="#1838BDF8" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding SeekStepDisplay}" FontSize="11" FontWeight="SemiBold" Foreground="#38BDF8" />
+                                    </Border>
+                                </Grid>
+                            </Button>
+                            <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
+
+                            <!-- Timeline Hover Preview -->
+                            <Button Classes="iris-drawer-item" Command="{Binding ToggleHoverPreviewCommand}">
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <PathIcon Grid.Column="0" Data="{StaticResource CameraIcon}" Width="16" Height="16" Foreground="#CBD5E1" Margin="0,0,12,0" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="Timeline Hover Preview" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
+                                        <TextBlock Text="Show Netflix-style frame preview on hover" FontSize="11" Foreground="#94A3B8" />
+                                    </StackPanel>
+                                    <Border Grid.Column="2" CornerRadius="4" Padding="8,3" Background="#1838BDF8" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding HoverPreviewStatusText}" FontSize="11" FontWeight="SemiBold" Foreground="#38BDF8" />
                                     </Border>
                                 </Grid>
                             </Button>
