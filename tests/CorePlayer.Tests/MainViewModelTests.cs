@@ -529,4 +529,126 @@ public class MainViewModelTests
         Assert.Equal(customPath, playback.SnapshotDirectory);
         Assert.Equal(customPath, vm.SnapshotDirectoryDisplay);
     }
+
+    [Fact]
+    public void OpenSkippingSettings_NavigatesToPage4AndInitializesInput()
+    {
+        var playback = new FakePlaybackService();
+        var storage = new FakeStorageService();
+        using var vm = new MainViewModel(playback, storage);
+
+        vm.OpenSkippingSettings();
+        Assert.True(vm.IsSkippingSubPage);
+        Assert.Equal(4, vm.OptionsPanelPage);
+        Assert.Equal("Skipping Interval", vm.OptionsPanelTitle);
+        Assert.Equal("5", vm.CustomSeekStepInput);
+
+        // Going back from Page 4 goes to Page 1 (Settings)
+        vm.NavigateBack();
+        Assert.True(vm.IsSettingsSubPage);
+        Assert.Equal(1, vm.OptionsPanelPage);
+
+        // Going back from Page 1 goes to Page 0 (Main options)
+        vm.NavigateBack();
+        Assert.True(vm.IsOptionsRootPage);
+        Assert.Equal(0, vm.OptionsPanelPage);
+    }
+
+    [Fact]
+    public void DecrementSeekStep_ClampsAtMinimumOneFraction()
+    {
+        var playback = new FakePlaybackService();
+        var storage = new FakeStorageService();
+        using var vm = new MainViewModel(playback, storage);
+
+        // Set to 0.02
+        vm.SeekStepSeconds = 0.02;
+        vm.DecrementSeekStep();
+        Assert.Equal(0.01, vm.SeekStepSeconds);
+
+        // Cannot decrease below minimum 0.01s (1 frame / 10ms)
+        vm.DecrementSeekStep();
+        Assert.Equal(0.01, vm.SeekStepSeconds);
+        Assert.Equal("0.01", vm.CustomSeekStepInput);
+    }
+
+    [Fact]
+    public void IncrementSeekStep_IncrementsSmoothly()
+    {
+        var playback = new FakePlaybackService();
+        var storage = new FakeStorageService();
+        using var vm = new MainViewModel(playback, storage);
+
+        vm.SeekStepSeconds = 0.01;
+        vm.IncrementSeekStep();
+        Assert.True(vm.SeekStepSeconds > 0.01);
+    }
+
+    [Fact]
+    public void ApplyCustomSeekStep_WithSecondsAndMilliseconds()
+    {
+        var playback = new FakePlaybackService();
+        var storage = new FakeStorageService();
+        using var vm = new MainViewModel(playback, storage);
+
+        // Manual decimal seconds (e.g. 0.033 for 1 frame @ 30fps)
+        vm.CustomSeekStepInput = "0.033";
+        vm.ApplyCustomSeekStep();
+        Assert.Equal(0.033, vm.SeekStepSeconds);
+        Assert.Contains("1 Frame", vm.SeekStepDisplay);
+
+        // Manual milliseconds input (e.g. "50ms")
+        vm.CustomSeekStepInput = "50ms";
+        vm.ApplyCustomSeekStep();
+        Assert.Equal(0.05, vm.SeekStepSeconds);
+        Assert.Equal("50 ms (0.050s)", vm.SeekStepDisplay);
+
+        // Manual input below minimum (e.g. "0.002") clamps to 0.01
+        vm.CustomSeekStepInput = "0.002";
+        vm.ApplyCustomSeekStep();
+        Assert.Equal(0.01, vm.SeekStepSeconds);
+
+        // Manual input above maximum (e.g. "120") clamps to 60.0
+        vm.CustomSeekStepInput = "120";
+        vm.ApplyCustomSeekStep();
+        Assert.Equal(60.0, vm.SeekStepSeconds);
+    }
+
+    [Fact]
+    public void SetPresetSeekStep_UpdatesStepProperly()
+    {
+        var playback = new FakePlaybackService();
+        var storage = new FakeStorageService();
+        using var vm = new MainViewModel(playback, storage);
+
+        vm.SetPresetSeekStep(0.033);
+        Assert.Equal(0.033, vm.SeekStepSeconds);
+        Assert.Equal("Frame Accurate", vm.SeekStepPrecisionBadge);
+
+        vm.SetPresetSeekStep(0.5);
+        Assert.Equal(0.5, vm.SeekStepSeconds);
+        Assert.Equal("Millisecond", vm.SeekStepPrecisionBadge);
+
+        vm.SetPresetSeekStep(5.0);
+        Assert.Equal(5.0, vm.SeekStepSeconds);
+        Assert.Equal("Standard", vm.SeekStepPrecisionBadge);
+    }
+
+    [Fact]
+    public void SeekRelativeWithHud_FormatsSubSecondWithMilliseconds()
+    {
+        var playback = new FakePlaybackService();
+        var storage = new FakeStorageService();
+        using var vm = new MainViewModel(playback, storage);
+
+        // 1 frame step
+        vm.SeekStepSeconds = 0.033;
+        vm.SeekForward5();
+        Assert.Equal("+1 Frame (33ms)", vm.SkipForwardText);
+
+        // 50ms step backward
+        vm.SeekStepSeconds = 0.050;
+        vm.SeekBackward5();
+        Assert.Equal("-50 ms", vm.SkipBackwardText);
+    }
 }

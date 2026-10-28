@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Avalonia.Media.Imaging;
@@ -151,6 +152,7 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     public bool IsSettingsSubPage => OptionsPanelPage == 1;
     public bool IsAspectRatioSubPage => OptionsPanelPage == 2;
     public bool IsSpeedSubPage => OptionsPanelPage == 3;
+    public bool IsSkippingSubPage => OptionsPanelPage == 4;
     public bool IsOptionsSubPage => OptionsPanelPage != 0;
 
     public string OptionsPanelTitle => OptionsPanelPage switch
@@ -158,6 +160,7 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         1 => "Settings",
         2 => "Aspect Ratio",
         3 => "Playback Speed",
+        4 => "Skipping Interval",
         _ => "Options"
     };
 
@@ -167,6 +170,7 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(IsSettingsSubPage));
         OnPropertyChanged(nameof(IsAspectRatioSubPage));
         OnPropertyChanged(nameof(IsSpeedSubPage));
+        OnPropertyChanged(nameof(IsSkippingSubPage));
         OnPropertyChanged(nameof(IsOptionsSubPage));
         OnPropertyChanged(nameof(OptionsPanelTitle));
     }
@@ -247,14 +251,78 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     private bool _autoResume = true;
 
     [ObservableProperty]
-    private int _seekStepSeconds = 5;
+    private double _seekStepSeconds = 5.0;
+
+    [ObservableProperty]
+    private string _customSeekStepInput = "5.0";
 
     [ObservableProperty]
     private bool _enableHoverPreview = true;
 
     public bool IsScrubbing { get; set; }
 
-    public string SeekStepDisplay => $"{SeekStepSeconds}s";
+    public string SeekStepDisplay
+    {
+        get
+        {
+            if (SeekStepSeconds < 1.0)
+            {
+                var ms = (int)Math.Round(SeekStepSeconds * 1000.0);
+                if (Math.Abs(SeekStepSeconds - 0.033) < 0.003)
+                {
+                    return $"1 Frame ({ms}ms)";
+                }
+                return $"{ms} ms ({SeekStepSeconds:0.000}s)";
+            }
+            return $"{SeekStepSeconds:0.##}s";
+        }
+    }
+
+    public string SeekStepPrimaryDisplay
+    {
+        get
+        {
+            if (SeekStepSeconds < 1.0)
+            {
+                var ms = (int)Math.Round(SeekStepSeconds * 1000.0);
+                if (Math.Abs(SeekStepSeconds - 0.033) < 0.003)
+                {
+                    return "1 Frame (~33ms)";
+                }
+                return $"{ms} ms";
+            }
+            return $"{SeekStepSeconds:0.###} s";
+        }
+    }
+
+    public string SeekStepSecondaryDisplay
+    {
+        get
+        {
+            if (SeekStepSeconds < 1.0)
+            {
+                var ms = (int)Math.Round(SeekStepSeconds * 1000.0);
+                if (Math.Abs(SeekStepSeconds - 0.033) < 0.003)
+                {
+                    return "0.033 seconds · Single Frame (Premiere / After Effects)";
+                }
+                return $"{SeekStepSeconds:0.000} seconds · High-Precision Sub-Second";
+            }
+            var msTotal = (int)Math.Round(SeekStepSeconds * 1000.0);
+            return $"{msTotal:#,##0} milliseconds · Standard Navigation";
+        }
+    }
+
+    public string SeekStepPrecisionBadge
+    {
+        get
+        {
+            if (SeekStepSeconds <= 0.040) return "Frame Accurate";
+            if (SeekStepSeconds < 1.0) return "Millisecond";
+            return "Standard";
+        }
+    }
+
     public string AutoResumeStatusText => AutoResume ? "Enabled" : "Disabled";
     public string HoverPreviewStatusText => EnableHoverPreview ? "Enabled" : "Disabled";
     public string SnapshotDirectoryDisplay => string.IsNullOrWhiteSpace(SnapshotDirectory)
@@ -281,9 +349,17 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(AutoResumeStatusText));
     }
 
-    partial void OnSeekStepSecondsChanged(int value)
+    partial void OnSeekStepSecondsChanged(double value)
     {
         OnPropertyChanged(nameof(SeekStepDisplay));
+        OnPropertyChanged(nameof(SeekStepPrimaryDisplay));
+        OnPropertyChanged(nameof(SeekStepSecondaryDisplay));
+        OnPropertyChanged(nameof(SeekStepPrecisionBadge));
+        if (double.TryParse(CustomSeekStepInput, NumberStyles.Float, CultureInfo.InvariantCulture, out var curVal) &&
+            Math.Abs(curVal - value) > 0.001)
+        {
+            CustomSeekStepInput = value.ToString("0.###", CultureInfo.InvariantCulture);
+        }
     }
 
     // Smart Auto-Resume Prompt
@@ -396,7 +472,8 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         _repeatMode = settings.RepeatMode;
         _autoResume = settings.AutoResume;
         _enableHoverPreview = settings.HoverPreview;
-        _seekStepSeconds = settings.SeekStepSeconds > 0 ? settings.SeekStepSeconds : 5;
+        _seekStepSeconds = settings.SeekStepSeconds > 0 ? settings.SeekStepSeconds : 5.0;
+        _customSeekStepInput = _seekStepSeconds.ToString("0.###", CultureInfo.InvariantCulture);
         _snapshotDirectory = settings.SnapshotDirectory ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "CorePlayer_Snapshots");
         _playback.SnapshotDirectory = _snapshotDirectory;
 
@@ -583,8 +660,15 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private static string FormatTime(TimeSpan time)
+    private string FormatTime(TimeSpan time)
     {
+        if (SeekStepSeconds < 1.0)
+        {
+            return time.TotalHours >= 1 
+                ? time.ToString(@"hh\:mm\:ss\.fff") 
+                : time.ToString(@"mm\:ss\.fff");
+        }
+
         return time.TotalHours >= 1 
             ? time.ToString(@"hh\:mm\:ss") 
             : time.ToString(@"mm\:ss");
@@ -790,6 +874,25 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         _currentHoverSeconds = -1;
     }
 
+    private static string FormatSkipHudText(double seconds, bool forward)
+    {
+        var sign = forward ? "+" : "-";
+        if (seconds < 1.0)
+        {
+            var ms = (int)Math.Round(seconds * 1000.0);
+            if (Math.Abs(seconds - 0.033) < 0.005)
+            {
+                return $"{sign}1 Frame ({ms}ms)";
+            }
+            return $"{sign}{ms} ms";
+        }
+        if (Math.Abs(seconds % 1.0) > 0.001)
+        {
+            return $"{sign}{seconds:0.##} seconds";
+        }
+        return $"{sign}{seconds:0} seconds";
+    }
+
     public void SeekRelativeWithHud(double offsetSeconds)
     {
         _playback.SeekRelative(offsetSeconds);
@@ -806,7 +909,7 @@ public partial class MainViewModel : ViewModelBase, IDisposable
                 _accumulatedForwardSeconds = offsetSeconds;
             }
 
-            SkipForwardText = $"+{_accumulatedForwardSeconds:0} seconds";
+            SkipForwardText = FormatSkipHudText(_accumulatedForwardSeconds, forward: true);
             IsSkipBackwardHudVisible = false;
             _accumulatedBackwardSeconds = 0;
             IsSkipForwardHudVisible = true;
@@ -823,7 +926,7 @@ public partial class MainViewModel : ViewModelBase, IDisposable
                 _accumulatedBackwardSeconds = abs;
             }
 
-            SkipBackwardText = $"-{_accumulatedBackwardSeconds:0} seconds";
+            SkipBackwardText = FormatSkipHudText(_accumulatedBackwardSeconds, forward: false);
             IsSkipForwardHudVisible = false;
             _accumulatedForwardSeconds = 0;
             IsSkipBackwardHudVisible = true;
@@ -849,6 +952,174 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     public void SeekBackward10() => SeekRelativeWithHud(-SeekStepSeconds * 2);
 
     [RelayCommand]
+    public void OpenSkippingSettings()
+    {
+        CustomSeekStepInput = SeekStepSeconds.ToString("0.###", CultureInfo.InvariantCulture);
+        OptionsPanelPage = 4;
+    }
+
+    [RelayCommand]
+    public void DecrementSeekStep()
+    {
+        double current = SeekStepSeconds;
+        double next;
+
+        if (current <= 0.015)
+        {
+            next = 0.01;
+        }
+        else if (current <= 0.05)
+        {
+            next = Math.Max(0.01, Math.Round(current - 0.01, 3));
+        }
+        else if (current <= 0.10)
+        {
+            next = Math.Round(current - 0.02, 3);
+        }
+        else if (current <= 0.50)
+        {
+            next = Math.Round(current - 0.05, 3);
+        }
+        else if (current <= 1.0)
+        {
+            next = Math.Round(current - 0.1, 2);
+        }
+        else if (current <= 5.0)
+        {
+            next = Math.Round(current - 0.5, 2);
+        }
+        else
+        {
+            next = Math.Round(current - 1.0, 1);
+        }
+
+        SeekStepSeconds = Math.Clamp(next, 0.01, 60.0);
+        CustomSeekStepInput = SeekStepSeconds.ToString("0.###", CultureInfo.InvariantCulture);
+        SaveCurrentSettings();
+    }
+
+    [RelayCommand]
+    public void IncrementSeekStep()
+    {
+        double current = SeekStepSeconds;
+        double next;
+
+        if (current < 0.04)
+        {
+            next = Math.Round(current + 0.01, 3);
+        }
+        else if (current < 0.10)
+        {
+            next = Math.Round(current + 0.02, 3);
+        }
+        else if (current < 0.50)
+        {
+            next = Math.Round(current + 0.05, 3);
+        }
+        else if (current < 1.0)
+        {
+            next = Math.Round(current + 0.1, 2);
+        }
+        else if (current < 5.0)
+        {
+            next = Math.Round(current + 0.5, 2);
+        }
+        else
+        {
+            next = Math.Round(current + 1.0, 1);
+        }
+
+        SeekStepSeconds = Math.Clamp(next, 0.01, 60.0);
+        CustomSeekStepInput = SeekStepSeconds.ToString("0.###", CultureInfo.InvariantCulture);
+        SaveCurrentSettings();
+    }
+
+    [RelayCommand]
+    public void SetPresetSeekStep(object? param)
+    {
+        double val = 5.0;
+        if (param is double d) val = d;
+        else if (param is string s && double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed))
+            val = parsed;
+
+        SeekStepSeconds = Math.Clamp(val, 0.01, 60.0);
+        CustomSeekStepInput = SeekStepSeconds.ToString("0.###", CultureInfo.InvariantCulture);
+        ShowToast($"Skip Step: {SeekStepDisplay}");
+        SaveCurrentSettings();
+    }
+
+    [RelayCommand]
+    public void ApplyCustomSeekStep()
+    {
+        if (string.IsNullOrWhiteSpace(CustomSeekStepInput))
+        {
+            ShowToast("Please enter a skip duration");
+            return;
+        }
+
+        var text = CustomSeekStepInput.Trim();
+        double parsedSeconds = 0;
+        bool success = false;
+
+        if (text.EndsWith("ms", StringComparison.OrdinalIgnoreCase))
+        {
+            var numPart = text.Substring(0, text.Length - 2).Trim();
+            if (double.TryParse(numPart, NumberStyles.Float, CultureInfo.InvariantCulture, out var msVal) ||
+                double.TryParse(numPart, NumberStyles.Float, CultureInfo.CurrentCulture, out msVal))
+            {
+                parsedSeconds = msVal / 1000.0;
+                success = true;
+            }
+        }
+        else if (text.EndsWith("s", StringComparison.OrdinalIgnoreCase))
+        {
+            var numPart = text.Substring(0, text.Length - 1).Trim();
+            if (double.TryParse(numPart, NumberStyles.Float, CultureInfo.InvariantCulture, out var sVal) ||
+                double.TryParse(numPart, NumberStyles.Float, CultureInfo.CurrentCulture, out sVal))
+            {
+                parsedSeconds = sVal;
+                success = true;
+            }
+        }
+        else
+        {
+            if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var val) ||
+                double.TryParse(text, NumberStyles.Float, CultureInfo.CurrentCulture, out val))
+            {
+                parsedSeconds = val;
+                success = true;
+            }
+        }
+
+        if (success)
+        {
+            if (parsedSeconds < 0.01)
+            {
+                parsedSeconds = 0.01;
+                ShowToast("Clamped to minimum 1 frame (10ms / 0.01s)");
+            }
+            else if (parsedSeconds > 60.0)
+            {
+                parsedSeconds = 60.0;
+                ShowToast("Clamped to maximum 60s");
+            }
+            else
+            {
+                ShowToast($"Skip Step set to {SeekStepDisplay}");
+            }
+
+            SeekStepSeconds = Math.Round(parsedSeconds, 3);
+            CustomSeekStepInput = SeekStepSeconds.ToString("0.###", CultureInfo.InvariantCulture);
+            SaveCurrentSettings();
+        }
+        else
+        {
+            ShowToast("Invalid number format. Try e.g. 0.033 or 50ms");
+            CustomSeekStepInput = SeekStepSeconds.ToString("0.###", CultureInfo.InvariantCulture);
+        }
+    }
+
+    [RelayCommand]
     public void ToggleAutoResume()
     {
         AutoResume = !AutoResume;
@@ -861,12 +1132,15 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     {
         SeekStepSeconds = SeekStepSeconds switch
         {
-            5 => 10,
-            10 => 15,
-            15 => 30,
-            _ => 5
+            < 0.05 => 0.1,
+            < 0.2 => 0.5,
+            < 0.8 => 1.0,
+            < 2.0 => 5.0,
+            < 8.0 => 10.0,
+            _ => 0.033
         };
-        ShowToast($"Seek Step: {SeekStepSeconds}s");
+        CustomSeekStepInput = SeekStepSeconds.ToString("0.###", CultureInfo.InvariantCulture);
+        ShowToast($"Seek Step: {SeekStepDisplay}");
         SaveCurrentSettings();
     }
 
@@ -1239,7 +1513,14 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     [RelayCommand]
     public void NavigateBack()
     {
-        OptionsPanelPage = 0;
+        if (OptionsPanelPage == 4)
+        {
+            OptionsPanelPage = 1; // Return to Settings
+        }
+        else
+        {
+            OptionsPanelPage = 0; // Return to Main Options
+        }
     }
 
     [RelayCommand]

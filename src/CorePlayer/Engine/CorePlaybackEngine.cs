@@ -556,6 +556,15 @@ public class CorePlaybackEngine : ICorePlaybackEngine
     {
         Pause();
         _context.RunCommand(default, forward ? "frame-step" : "frame-back-step");
+        try
+        {
+            if (_context.TimePos.Get() is double pos)
+            {
+                _position = TimeSpan.FromSeconds(pos);
+                PositionChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+        catch { }
     }
 
     public string TakeSnapshot(bool includeSubtitles = true)

@@ -44,6 +44,12 @@ Most modern media players are weighed down by heavy browser engines, telemetry, 
 - **Frame-Accurate Seeking:** Clicking on the timeline seeks precisely to the exact frame displayed in the preview.
 - **Resource Optimized:** Thumbnails are generated on-demand using an isolated background worker. Instantly dismissed on mouse leave with zero persistent disk accumulation.
 
+### ⏱️ Professional Frame & Millisecond Scrubbing (CCTV & Video Analysis)
+- **Custom Skip Duration:** Full settings panel to configure arrow key skipping with a smooth dial stepper, continuous slider, manual numerical input, and quick presets.
+- **Editing Suite Precision:** Configurable down to **1 single frame (~33ms / 0.033s)** or **10 milliseconds (0.010s)**, matching professional NLE suites (Adobe Premiere Pro, After Effects).
+- **Sub-Second Timecode:** Automatically displays millisecond-accurate timestamps (`mm:ss.fff`) on the timeline clock, skip HUD, and hover preview when precision mode is active.
+- **Single-Frame Stepping:** Step individual frames forward (`.`) or backward (`,`) for frame-by-frame forensics and data collection.
+
 ### 📱 Right-Side Options Drawer
 - Clean, full-height slide-out panel accessible from the bottom-right hamburger menu.
 - **Multi-Level Navigation:** Drill down into sub-pages with a smooth `< Back` navigation header:
@@ -73,7 +79,7 @@ Most modern media players are weighed down by heavy browser engines, telemetry, 
 | Key / Gesture | Function |
 | :--- | :--- |
 | `Space` | Play / Pause playback |
-| `Left Arrow` / `Right Arrow` | Seek backward / forward 5 seconds |
+| `Left Arrow` / `Right Arrow` | Seek backward / forward by configured step (down to 1 frame / 10ms) |
 | `Shift + Left` / `Shift + Right` | Seek backward / forward 30 seconds |
 | `Up Arrow` / `Down Arrow` | Volume Up / Down (+/- 5%) |
 | `Mouse Wheel` *(over Volume)* | Instant volume adjust with automatic slider reveal |
@@ -143,7 +149,7 @@ To build the release binary locally:
 # Restore and build in Release mode
 dotnet build -c Release
 
-# Execute test suite (45 unit tests)
+# Execute test suite (51 unit tests)
 dotnet test -c Release
 ```
 

@@ -621,17 +621,20 @@
                             </Button>
                             <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
 
-                            <!-- Seek Step (Arrow Keys) -->
-                            <Button Classes="iris-drawer-item" Command="{Binding CycleSeekStepCommand}">
+                            <!-- Skipping & Frame Interval (Navigates to Page 4) -->
+                            <Button Classes="iris-drawer-item" Command="{Binding OpenSkippingSettingsCommand}">
                                 <Grid ColumnDefinitions="Auto, *, Auto">
                                     <PathIcon Grid.Column="0" Data="{StaticResource SkipForwardChevronIcon}" Width="16" Height="16" Foreground="#CBD5E1" Margin="0,0,12,0" VerticalAlignment="Center" />
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock Text="Seek Step Interval" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
-                                        <TextBlock Text="Arrow key skip duration" FontSize="11" Foreground="#94A3B8" />
+                                        <TextBlock Text="Skipping &amp; Frame Interval" FontSize="13" FontWeight="Medium" Foreground="#EEEEEE" />
+                                        <TextBlock Text="Custom skip dial, manual input &amp; presets" FontSize="11" Foreground="#94A3B8" />
                                     </StackPanel>
-                                    <Border Grid.Column="2" CornerRadius="4" Padding="8,3" Background="#1838BDF8" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding SeekStepDisplay}" FontSize="11" FontWeight="SemiBold" Foreground="#38BDF8" />
-                                    </Border>
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <Border CornerRadius="4" Padding="8,3" Background="#1838BDF8">
+                                            <TextBlock Text="{Binding SeekStepDisplay}" FontSize="11" FontWeight="SemiBold" Foreground="#38BDF8" />
+                                        </Border>
+                                        <PathIcon Data="{StaticResource ChevronRightIcon}" Width="10" Height="10" Foreground="#64748B" VerticalAlignment="Center" />
+                                    </StackPanel>
                                 </Grid>
                             </Button>
                             <Border Height="1" Background="#0EFFFFFF" Margin="8,0" />
@@ -860,6 +863,156 @@
                                     <PathIcon Grid.Column="1" Data="{StaticResource CheckIcon}" Width="12" Height="12" Foreground="#38BDF8" IsVisible="{Binding IsSpeed20}" />
                                 </Grid>
                             </Button>
+                        </StackPanel>
+
+                        <!-- ================= PAGE 4: SKIPPING & FRAME STEP INTERVAL SUB-PAGE ================= -->
+                        <StackPanel IsVisible="{Binding IsSkippingSubPage}" Spacing="10">
+                            <!-- Hero Indicator Card -->
+                            <Border Background="#14FFFFFF" CornerRadius="10" Padding="14,12" BorderBrush="#2038BDF8" BorderThickness="1">
+                                <StackPanel Spacing="4">
+                                    <Grid ColumnDefinitions="*, Auto">
+                                        <TextBlock Text="CURRENT SKIP DURATION" FontSize="10" FontWeight="Bold" Foreground="#38BDF8" LetterSpacing="1" />
+                                        <Border CornerRadius="4" Padding="6,2" Background="#1838BDF8">
+                                            <TextBlock Text="{Binding SeekStepPrecisionBadge}" FontSize="10" FontWeight="SemiBold" Foreground="#38BDF8" />
+                                        </Border>
+                                    </Grid>
+                                    <TextBlock Text="{Binding SeekStepPrimaryDisplay}" FontSize="22" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,2,0,0" />
+                                    <TextBlock Text="{Binding SeekStepSecondaryDisplay}" FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap" />
+                                    <TextBlock Text="Left / Right arrow keys skip by this exact interval." FontSize="11" Foreground="#64748B" Margin="0,2,0,0" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Dial & Stepper Controls -->
+                            <Border Background="#0CFFFFFF" CornerRadius="10" Padding="12,10">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Dial &amp; Stepper" FontSize="12" FontWeight="SemiBold" Foreground="#CBD5E1" />
+                                    <Grid ColumnDefinitions="Auto, *, Auto" VerticalAlignment="Center">
+                                        <!-- Decrement Button (-) -->
+                                        <Button Grid.Column="0"
+                                                Classes="iris-drawer-back-btn"
+                                                Command="{Binding DecrementSeekStepCommand}"
+                                                Width="42" Height="36"
+                                                CornerRadius="8"
+                                                Background="#18FFFFFF"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                ToolTip.Tip="Decrease skip duration (down to 1 frame / 10ms)">
+                                            <PathIcon Data="{StaticResource MinusIcon}" Width="14" Height="14" Foreground="#CBD5E1" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Button>
+
+                                        <!-- Value Badge -->
+                                        <StackPanel Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding SeekStepDisplay}" FontSize="14" FontWeight="Bold" Foreground="#EEEEEE" HorizontalAlignment="Center" />
+                                            <TextBlock Text="Min: 1 frame (10ms)" FontSize="10" Foreground="#64748B" HorizontalAlignment="Center" />
+                                        </StackPanel>
+
+                                        <!-- Increment Button (+) -->
+                                        <Button Grid.Column="2"
+                                                Classes="iris-drawer-back-btn"
+                                                Command="{Binding IncrementSeekStepCommand}"
+                                                Width="42" Height="36"
+                                                CornerRadius="8"
+                                                Background="#18FFFFFF"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                ToolTip.Tip="Increase skip duration">
+                                            <PathIcon Data="{StaticResource PlusIcon}" Width="14" Height="14" Foreground="#CBD5E1" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Button>
+                                    </Grid>
+
+                                    <!-- Slider Dial -->
+                                    <Grid ColumnDefinitions="Auto, *, Auto" Margin="0,4,0,0" VerticalAlignment="Center">
+                                        <TextBlock Grid.Column="0" Text="10ms" FontSize="10" Foreground="#64748B" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                        <Slider Grid.Column="1"
+                                                Minimum="0.01"
+                                                Maximum="30.0"
+                                                Value="{Binding SeekStepSeconds, Mode=TwoWay}"
+                                                Classes="iris-vol"
+                                                VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="2" Text="30s" FontSize="10" Foreground="#64748B" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Manual Number Entry -->
+                            <Border Background="#0CFFFFFF" CornerRadius="10" Padding="12,10">
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Manual Number Entry" FontSize="12" FontWeight="SemiBold" Foreground="#CBD5E1" />
+                                    <TextBlock Text="Enter duration in seconds (e.g. 0.033, 0.1, 0.5, 2.5) or milliseconds (e.g. 33ms, 50ms):" FontSize="11" Foreground="#94A3B8" TextWrapping="Wrap" />
+                                    <Grid ColumnDefinitions="*, Auto" Margin="0,4,0,0">
+                                        <TextBox Grid.Column="0"
+                                                 Text="{Binding CustomSeekStepInput, Mode=TwoWay}"
+                                                 Watermark="e.g. 0.033 or 50ms"
+                                                 FontSize="12"
+                                                 Padding="10,6"
+                                                 Margin="0,0,8,0"
+                                                 Background="#18191E"
+                                                 Foreground="#FFFFFF"
+                                                 BorderBrush="#334155"
+                                                 CornerRadius="6"
+                                                 KeyDown="OnCustomSeekStepKeyDown" />
+                                        <Button Grid.Column="1"
+                                                Command="{Binding ApplyCustomSeekStepCommand}"
+                                                Classes="iris-drawer-back-btn"
+                                                Background="#2038BDF8"
+                                                Padding="14,6"
+                                                CornerRadius="6"
+                                                VerticalAlignment="Stretch">
+                                            <TextBlock Text="Apply" FontSize="12" FontWeight="SemiBold" Foreground="#38BDF8" VerticalAlignment="Center" />
+                                        </Button>
+                                    </Grid>
+                                    <TextBlock Text="Minimum limit: 1 frame (~0.033s / 10ms - NLE Standard)" FontSize="10" Foreground="#64748B" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Quick Presets -->
+                            <Border Background="#0CFFFFFF" CornerRadius="10" Padding="12,10">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Quick Presets" FontSize="12" FontWeight="SemiBold" Foreground="#CBD5E1" />
+                                    <WrapPanel Orientation="Horizontal">
+                                        <Button Classes="iris-preset-pill" Command="{Binding SetPresetSeekStepCommand}" CommandParameter="0.033" Margin="0,0,6,6">
+                                            <TextBlock Text="1 Frame (33ms)" FontSize="11" />
+                                        </Button>
+                                        <Button Classes="iris-preset-pill" Command="{Binding SetPresetSeekStepCommand}" CommandParameter="0.01" Margin="0,0,6,6">
+                                            <TextBlock Text="10 ms (Min)" FontSize="11" />
+                                        </Button>
+                                        <Button Classes="iris-preset-pill" Command="{Binding SetPresetSeekStepCommand}" CommandParameter="0.05" Margin="0,0,6,6">
+                                            <TextBlock Text="50 ms" FontSize="11" />
+                                        </Button>
+                                        <Button Classes="iris-preset-pill" Command="{Binding SetPresetSeekStepCommand}" CommandParameter="0.1" Margin="0,0,6,6">
+                                            <TextBlock Text="100 ms" FontSize="11" />
+                                        </Button>
+                                        <Button Classes="iris-preset-pill" Command="{Binding SetPresetSeekStepCommand}" CommandParameter="0.5" Margin="0,0,6,6">
+                                            <TextBlock Text="500 ms" FontSize="11" />
+                                        </Button>
+                                        <Button Classes="iris-preset-pill" Command="{Binding SetPresetSeekStepCommand}" CommandParameter="1.0" Margin="0,0,6,6">
+                                            <TextBlock Text="1.0 s" FontSize="11" />
+                                        </Button>
+                                        <Button Classes="iris-preset-pill" Command="{Binding SetPresetSeekStepCommand}" CommandParameter="2.0" Margin="0,0,6,6">
+                                            <TextBlock Text="2.0 s" FontSize="11" />
+                                        </Button>
+                                        <Button Classes="iris-preset-pill" Command="{Binding SetPresetSeekStepCommand}" CommandParameter="5.0" Margin="0,0,6,6">
+                                            <TextBlock Text="5.0 s (Default)" FontSize="11" />
+                                        </Button>
+                                        <Button Classes="iris-preset-pill" Command="{Binding SetPresetSeekStepCommand}" CommandParameter="10.0" Margin="0,0,6,6">
+                                            <TextBlock Text="10.0 s" FontSize="11" />
+                                        </Button>
+                                    </WrapPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- CCTV & Frame Inspection Guide Card -->
+                            <Border Background="#1038BDF8" CornerRadius="8" Padding="12,10" BorderBrush="#2038BDF8" BorderThickness="1">
+                                <StackPanel Spacing="4">
+                                    <Grid ColumnDefinitions="Auto, *">
+                                        <PathIcon Grid.Column="0" Data="{StaticResource CameraIcon}" Width="14" Height="14" Foreground="#38BDF8" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="1" Text="CCTV &amp; Frame Inspection" FontSize="12" FontWeight="SemiBold" Foreground="#38BDF8" VerticalAlignment="Center" />
+                                    </Grid>
+                                    <TextBlock Text="• Press '.' (Period) to step 1 frame forward." FontSize="11" Foreground="#CBD5E1" />
+                                    <TextBlock Text="• Press ',' (Comma) to step 1 frame backward." FontSize="11" Foreground="#CBD5E1" />
+                                    <TextBlock Text="• Press 'Ctrl+S' or 'S' to capture crystal-clear PNG snapshots to your configured folder." FontSize="11" Foreground="#CBD5E1" />
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
                     </Panel>
                 </ScrollViewer>

@@ -24,7 +24,7 @@ public class PlayerSettings
     public bool AutoResume { get; set; } = true;
     public bool AutoPlayNextInFolder { get; set; } = true;
     public string? SnapshotDirectory { get; set; }
-    public int SeekStepSeconds { get; set; } = 5;
+    public double SeekStepSeconds { get; set; } = 5.0;
     public bool HoverPreview { get; set; } = true;
 }
 

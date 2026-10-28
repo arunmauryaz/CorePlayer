@@ -535,4 +535,28 @@
         <Setter Property="Padding" Value="4" />
     </Style>
 
+    <!-- Preset Pill Buttons for Fast Settings Selection -->
+    <Style Selector="Button.iris-preset-pill">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Background" Value="#14FFFFFF" />
+        <Setter Property="Foreground" Value="#CBD5E1" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="#22FFFFFF" />
+        <Setter Property="CornerRadius" Value="14" />
+        <Setter Property="Padding" Value="10,5" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.1" />
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.1" />
+                <BrushTransition Property="Foreground" Duration="0:0:0.1" />
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button.iris-preset-pill:pointerover">
+        <Setter Property="Background" Value="#2538BDF8" />
+        <Setter Property="BorderBrush" Value="#6038BDF8" />
+        <Setter Property="Foreground" Value="#FFFFFF" />
+    </Style>
+
 </Styles>

@@ -890,6 +890,15 @@ public partial class MainWindow : Window
             : WindowState.Maximized;
     }
 
+    private void OnCustomSeekStepKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            ViewModel?.ApplyCustomSeekStepCommand.Execute(null);
+            e.Handled = true;
+        }
+    }
+
     private void OnCloseClick(object? sender, RoutedEventArgs e)
     {
         Close();
